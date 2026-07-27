@@ -18,19 +18,21 @@ A portable, offline-first competitive programming platform that lets colleges, s
 ## Architecture
 
 ```mermaid
-graph TB
-    subgraph Participant["👤 Participant Laptop"]
-        B[Browser<br/>Chrome / Firefox]
+flowchart TB
+    subgraph Participant["Participant Laptop"]
+        direction TB
+        B["Browser (Chrome / Firefox)"]
     end
 
-    subgraph Server["🖥️ Organizer Laptop"]
-        CS[Contest Server<br/>Auth · Timer · API · WS]
-        JW[Judge Worker<br/>Compile · Test · Verify]
-        DB[(Database<br/>SQLite / PostgreSQL)]
+    subgraph Server["Organizer Laptop"]
+        direction TB
+        CS["Contest Server (Auth, Timer, API, WebSocket)"]
+        JW["Judge Worker (Compile, Test, Verify)"]
+        DB[("Database (SQLite / PostgreSQL)")]
     end
 
-    subgraph Network["📡 Network"]
-        R[Wi-Fi Router<br/>No Internet WAN]
+    subgraph Network["Network"]
+        R["Wi-Fi Router (No Internet WAN)"]
     end
 
     B <-->|HTTP / WebSocket| R
@@ -60,24 +62,30 @@ sequenceDiagram
     P->>CS: Submit Code
     CS->>DB: Store Submission
     CS->>Q: Enqueue Job
-    Q->>JW: Dequeue & Process
+    Q->>JW: Dequeue and Process
     JW->>JW: Compile Code
     JW->>JW: Run Hidden Testcases
     JW->>JW: Compare Output
     JW->>CS: Return Verdict
     CS->>DB: Update Result
     CS-->>P: Live Leaderboard Update (WebSocket)
-    Note over CS,P: End-to-end < 2 seconds
+    Note over CS,P: End-to-end under 2 seconds
 ```
 
 ## Network Topology
 
 ```mermaid
-graph LR
-    R[📡 LAN Router<br/>No Internet WAN] -->|RJ45 Ethernet| OL[🖥️ Organizer Laptop<br/>contest.local]
-    R -->|Wi-Fi| PL1[👨‍💻 Participant 1]
-    R -->|Wi-Fi| PL2[👨‍💻 Participant 2]
-    R -->|Wi-Fi| PL3[👨‍💻 Participant N...]
+flowchart LR
+    R["LAN Router (No Internet WAN)"]
+    OL["Organizer Laptop (contest.local)"]
+    P1["Participant 1"]
+    P2["Participant 2"]
+    PN["Participant N"]
+
+    R -->|RJ45 Ethernet| OL
+    R -->|Wi-Fi| P1
+    R -->|Wi-Fi| P2
+    R -->|Wi-Fi| PN
 ```
 
 Organizer on Ethernet (RJ45) · Participants on Wi-Fi · No internet access.
@@ -94,14 +102,14 @@ Organizer on Ethernet (RJ45) · Participants on Wi-Fi · No internet access.
 ## Two-Phase Evaluation
 
 ```mermaid
-graph LR
-    subgraph Live["⚡ During Contest"]
+flowchart LR
+    subgraph Live["During Contest"]
         A[Submit Code] --> B{Auto Judge}
-        B -->|AC| C[Live Leaderboard<br/>Provisional]
+        B -->|AC| C[Live Leaderboard - Provisional]
         B -->|WA| D[Show Verdict]
     end
 
-    subgraph Post["🧠 Post-Contest"]
+    subgraph Post["Post-Contest"]
         E[Manual Review] --> F[Time Complexity Analysis]
         F --> G[Final Leaderboard]
     end
@@ -117,25 +125,23 @@ graph LR
 
 ```mermaid
 flowchart LR
-    A[1. Create Contest] --> B[2. Upload Problems]
-    B --> C[3. Start Server]
-    C --> D[4. Join Wi-Fi]
-    D --> E[5. Login & Compete]
-    E --> F[6. Auto Judge]
-    F --> G[7. Live Leaderboard]
-    G --> H[8. Review & Publish]
+    A["01  Create Contest"] --> B["02  Upload Problems"]
+    B --> C["03  Start Server"]
+    C --> D["04  Join Wi-Fi"]
+    D --> E["05  Login and Compete"]
+    E --> F["06  Auto Judge"]
+    F --> G["07  Live Leaderboard"]
+    G --> H["08  Review and Publish"]
 ```
 
 ## Anti-Cheating Strategy
 
 ```mermaid
-graph TD
-    subgraph Layers["🛡️ Four Layers of Protection"]
-        L1[Layer 1: LAN Isolation<br/>No internet = no search / no AI]
-        L2[Layer 2: Heartbeat<br/>POST /heartbeat every few seconds]
-        L3[Layer 3: Browser Events<br/>Tab switches & fullscreen exits logged]
-        L4[Layer 4: Internet Detection<br/>Probes public endpoint periodically]
-    end
+flowchart TD
+    L1["Layer 1: LAN Isolation - No internet = no search, no AI"]
+    L2["Layer 2: Heartbeat - POST /heartbeat every few seconds"]
+    L3["Layer 3: Browser Events - Tab switches and fullscreen exits logged"]
+    L4["Layer 4: Internet Detection - Probes public endpoint periodically"]
 
     L1 --> L2 --> L3 --> L4
 ```
@@ -145,35 +151,35 @@ graph TD
 | 1 | LAN Isolation — Contest exists only inside local network | Disconnect → contest disappears |
 | 2 | Heartbeat — Browser sends `POST /heartbeat` every few seconds | Organizer sees disconnects instantly |
 | 3 | Browser Events — Tab switches, window blurs, fullscreen exits | Logged live on dashboard with timestamps |
-| 4 | Internet Detection — Browser probes public endpoint periodically | Warning flagged on dashboard & participant screen |
+| 4 | Internet Detection — Browser probes public endpoint periodically | Warning flagged on dashboard and participant screen |
 
 ## Tech Stack
 
 ```mermaid
-graph LR
-    subgraph Frontend["🎨 Frontend"]
+flowchart LR
+    subgraph Frontend["Frontend"]
         RE[React]
         TW[TailwindCSS]
         ME[Monaco Editor]
         RQ[React Query]
     end
 
-    subgraph Backend["⚙️ Backend"]
+    subgraph Backend["Backend"]
         FA[FastAPI]
         SA[SQLAlchemy]
         WS[WebSockets]
     end
 
-    subgraph Database["🗄️ Database"]
-        SL[SQLite<br/>MVP]
-        PG[PostgreSQL<br/>Production]
+    subgraph Database["Database"]
+        SL[SQLite - MVP]
+        PG[PostgreSQL - Production]
     end
 
-    subgraph Judge["⚖️ Judge Engine"]
+    subgraph Judge["Judge Engine"]
         PY[Python]
         QS[Queue System]
         MW[Multi-Worker]
-        DK[Docker<br/>Phase 3]
+        DK[Docker - Phase 3]
     end
 
     Frontend <--> Backend
@@ -211,28 +217,28 @@ Contest/
 ```mermaid
 gantt
     title BYTEARENA Roadmap
-    dateFormat  YYYY-MM-DD
-    axisFormat  %Y Q%q
+    dateFormat YYYY-MM-DD
+    axisFormat %Y Q%q
 
-    section Phase 1 - MVP
+    section MVP
     Contest Creation           :done, p1a, 2026-01-01, 60d
-    LAN Hosting & Login        :done, p1b, 2026-02-01, 45d
-    Problem Viewing & Submit   :done, p1c, 2026-03-01, 45d
-    Auto Judge & Leaderboard   :done, p1d, 2026-04-01, 45d
+    LAN Hosting and Login      :done, p1b, 2026-02-01, 45d
+    Problem Viewing and Submit :done, p1c, 2026-03-01, 45d
+    Auto Judge and Leaderboard :done, p1d, 2026-04-01, 45d
     Manual Review              :done, p1e, 2026-05-01, 30d
 
-    section Phase 2 - Enhancement
+    section Enhancement
     Captive Portal             :active, p2a, 2026-06-01, 30d
     Practice Mode              :p2b, 2026-06-15, 30d
     Clarifications             :p2c, 2026-07-01, 30d
-    Contest Templates           :p2d, 2026-07-15, 30d
+    Contest Templates          :p2d, 2026-07-15, 30d
     mDNS Auto-Discovery        :p2e, 2026-08-01, 30d
 
-    section Phase 3 - Advanced
+    section Advanced
     Docker Sandboxing          :p3a, 2026-09-01, 45d
     Plagiarism Detection       :p3b, 2026-10-01, 45d
     ICPC Penalties             :p3c, 2026-10-15, 30d
-    Analytics & Import/Export  :p3d, 2026-11-01, 45d
+    Analytics and Import Export :p3d, 2026-11-01, 45d
 ```
 
 ### Phase 1 — MVP (Core Platform)
@@ -245,30 +251,6 @@ Captive portal, practice mode, clarification requests, contest templates, and mD
 Docker sandboxing, multi-worker judge pool, plagiarism detection, ICPC penalties, contest import/export, and analytics dashboard.
 
 ## MVP Deliverables
-
-```mermaid
-mindmap
-  root((BYTEARENA MVP))
-    🛠️ Organizer
-      Create Contest
-      Upload Problems
-      Start Contest
-      Review Submissions
-      Publish Results
-    👨‍💻 Participant
-      Join LAN
-      Login
-      Read Problems
-      Submit Code
-      View Verdict
-      View Leaderboard
-    ⚙️ System
-      Offline Hosting
-      Auto Testcase Verification
-      Timestamp Tracking
-      Live Leaderboard
-      Manual Review
-```
 
 - **Organizer**: Create Contest, Upload Problems, Start Contest, Review Submissions, Publish Results
 - **Participant**: Join LAN, Login, Read Problems, Submit Code, View Verdict, View Leaderboard
