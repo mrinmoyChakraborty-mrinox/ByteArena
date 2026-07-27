@@ -17,29 +17,67 @@ A portable, offline-first competitive programming platform that lets colleges, s
 
 ## Architecture
 
-A clean client-server architecture with a decoupled judge worker for scalable, isolated code verification.
+```mermaid
+graph TB
+    subgraph Participant["👤 Participant Laptop"]
+        B[Browser<br/>Chrome / Firefox]
+    end
 
-```
-Browser (Participants)
-    │
-    ├── Contest Server  (Auth · Timer · API · WebSockets)
-    ├── Judge Worker    (Compile · Test · Verify)
-    └── Database        (SQLite / PostgreSQL)
+    subgraph Server["🖥️ Organizer Laptop"]
+        CS[Contest Server<br/>Auth · Timer · API · WS]
+        JW[Judge Worker<br/>Compile · Test · Verify]
+        DB[(Database<br/>SQLite / PostgreSQL)]
+    end
+
+    subgraph Network["📡 Network"]
+        R[Wi-Fi Router<br/>No Internet WAN]
+    end
+
+    B <-->|HTTP / WebSocket| R
+    R <-->|Ethernet RJ45| CS
+    CS <--> DB
+    CS -->|Submission Queue| JW
+    JW -->|Verdict| CS
+    B -.->|POST /heartbeat| CS
 ```
 
 ### Components
 
 - **Contest Server** — Handles authentication, contest timer, problem distribution, submission intake, leaderboard generation, organizer dashboard, and WebSocket push for live updates.
 - **Judge Worker** — An independent service that picks submissions from a queue, compiles code, runs hidden testcases, compares output, and returns a verdict. Scales to multiple workers.
-- **Submission Pipeline** — Submit → Queue → Judge → Compile → Run tests → Compare → Verdict → Leaderboard update. End-to-end in under 2 seconds with 4–8 workers.
+- **Database** — SQLite for MVP development; PostgreSQL for production deployments.
+
+## Submission Pipeline
+
+```mermaid
+sequenceDiagram
+    participant P as Participant
+    participant CS as Contest Server
+    participant Q as Judge Queue
+    participant JW as Judge Worker
+    participant DB as Database
+
+    P->>CS: Submit Code
+    CS->>DB: Store Submission
+    CS->>Q: Enqueue Job
+    Q->>JW: Dequeue & Process
+    JW->>JW: Compile Code
+    JW->>JW: Run Hidden Testcases
+    JW->>JW: Compare Output
+    JW->>CS: Return Verdict
+    CS->>DB: Update Result
+    CS-->>P: Live Leaderboard Update (WebSocket)
+    Note over CS,P: End-to-end < 2 seconds
+```
 
 ## Network Topology
 
-```
-LAN Router (No Internet WAN)
-    │
-    ├── Organizer Laptop  (RJ45 · contest.local)
-    └── Participants      (Wi-Fi · Browser)
+```mermaid
+graph LR
+    R[📡 LAN Router<br/>No Internet WAN] -->|RJ45 Ethernet| OL[🖥️ Organizer Laptop<br/>contest.local]
+    R -->|Wi-Fi| PL1[👨‍💻 Participant 1]
+    R -->|Wi-Fi| PL2[👨‍💻 Participant 2]
+    R -->|Wi-Fi| PL3[👨‍💻 Participant N...]
 ```
 
 Organizer on Ethernet (RJ45) · Participants on Wi-Fi · No internet access.
@@ -55,30 +93,93 @@ Organizer on Ethernet (RJ45) · Participants on Wi-Fi · No internet access.
 
 ## Two-Phase Evaluation
 
+```mermaid
+graph LR
+    subgraph Live["⚡ During Contest"]
+        A[Submit Code] --> B{Auto Judge}
+        B -->|AC| C[Live Leaderboard<br/>Provisional]
+        B -->|WA| D[Show Verdict]
+    end
+
+    subgraph Post["🧠 Post-Contest"]
+        E[Manual Review] --> F[Time Complexity Analysis]
+        F --> G[Final Leaderboard]
+    end
+
+    C --> E
+    D --> A
+```
+
 1. **Live Leaderboard (Provisional)** — During the contest, every accepted submission updates a live leaderboard via WebSockets using correctness and time-to-solve.
 2. **Post-Contest Analysis (Ultimate)** — After the contest, the system analyzes every accepted solution's time complexity in a single batch. The final leaderboard factors in solve time, time complexity, and manual review.
 
 ## Contest Lifecycle
 
-1. Create Contest
-2. Upload Problems
-3. Start Server
-4. Join Wi-Fi
-5. Login & Compete
-6. Auto Judge
-7. Live Leaderboard
-8. Review & Publish
+```mermaid
+flowchart LR
+    A[1. Create Contest] --> B[2. Upload Problems]
+    B --> C[3. Start Server]
+    C --> D[4. Join Wi-Fi]
+    D --> E[5. Login & Compete]
+    E --> F[6. Auto Judge]
+    F --> G[7. Live Leaderboard]
+    G --> H[8. Review & Publish]
+```
 
 ## Anti-Cheating Strategy
 
-| Layer | Method |
-|---|---|
-| 1 | LAN Isolation — Contest exists only inside the local network |
-| 2 | Heartbeat — Browser sends `POST /heartbeat` every few seconds |
-| 3 | Browser Events — Tab switches, window blurs, fullscreen exits logged live |
-| 4 | Internet Detection — Browser periodically probes a public endpoint |
+```mermaid
+graph TD
+    subgraph Layers["🛡️ Four Layers of Protection"]
+        L1[Layer 1: LAN Isolation<br/>No internet = no search / no AI]
+        L2[Layer 2: Heartbeat<br/>POST /heartbeat every few seconds]
+        L3[Layer 3: Browser Events<br/>Tab switches & fullscreen exits logged]
+        L4[Layer 4: Internet Detection<br/>Probes public endpoint periodically]
+    end
+
+    L1 --> L2 --> L3 --> L4
+```
+
+| Layer | Method | Detection |
+|---|---|---|
+| 1 | LAN Isolation — Contest exists only inside local network | Disconnect → contest disappears |
+| 2 | Heartbeat — Browser sends `POST /heartbeat` every few seconds | Organizer sees disconnects instantly |
+| 3 | Browser Events — Tab switches, window blurs, fullscreen exits | Logged live on dashboard with timestamps |
+| 4 | Internet Detection — Browser probes public endpoint periodically | Warning flagged on dashboard & participant screen |
 
 ## Tech Stack
+
+```mermaid
+graph LR
+    subgraph Frontend["🎨 Frontend"]
+        RE[React]
+        TW[TailwindCSS]
+        ME[Monaco Editor]
+        RQ[React Query]
+    end
+
+    subgraph Backend["⚙️ Backend"]
+        FA[FastAPI]
+        SA[SQLAlchemy]
+        WS[WebSockets]
+    end
+
+    subgraph Database["🗄️ Database"]
+        SL[SQLite<br/>MVP]
+        PG[PostgreSQL<br/>Production]
+    end
+
+    subgraph Judge["⚖️ Judge Engine"]
+        PY[Python]
+        QS[Queue System]
+        MW[Multi-Worker]
+        DK[Docker<br/>Phase 3]
+    end
+
+    Frontend <--> Backend
+    Backend <--> Database
+    Backend <--> Judge
+```
 
 | Area | Technologies |
 |---|---|
@@ -107,6 +208,33 @@ Contest/
 
 ## Development Roadmap
 
+```mermaid
+gantt
+    title BYTEARENA Roadmap
+    dateFormat  YYYY-MM-DD
+    axisFormat  %Y Q%q
+
+    section Phase 1 - MVP
+    Contest Creation           :done, p1a, 2026-01-01, 60d
+    LAN Hosting & Login        :done, p1b, 2026-02-01, 45d
+    Problem Viewing & Submit   :done, p1c, 2026-03-01, 45d
+    Auto Judge & Leaderboard   :done, p1d, 2026-04-01, 45d
+    Manual Review              :done, p1e, 2026-05-01, 30d
+
+    section Phase 2 - Enhancement
+    Captive Portal             :active, p2a, 2026-06-01, 30d
+    Practice Mode              :p2b, 2026-06-15, 30d
+    Clarifications             :p2c, 2026-07-01, 30d
+    Contest Templates           :p2d, 2026-07-15, 30d
+    mDNS Auto-Discovery        :p2e, 2026-08-01, 30d
+
+    section Phase 3 - Advanced
+    Docker Sandboxing          :p3a, 2026-09-01, 45d
+    Plagiarism Detection       :p3b, 2026-10-01, 45d
+    ICPC Penalties             :p3c, 2026-10-15, 30d
+    Analytics & Import/Export  :p3d, 2026-11-01, 45d
+```
+
 ### Phase 1 — MVP (Core Platform)
 Contest creation, LAN hosting, login, problem viewing, code submission, automatic judging, leaderboard, and manual review.
 
@@ -117,6 +245,30 @@ Captive portal, practice mode, clarification requests, contest templates, and mD
 Docker sandboxing, multi-worker judge pool, plagiarism detection, ICPC penalties, contest import/export, and analytics dashboard.
 
 ## MVP Deliverables
+
+```mermaid
+mindmap
+  root((BYTEARENA MVP))
+    🛠️ Organizer
+      Create Contest
+      Upload Problems
+      Start Contest
+      Review Submissions
+      Publish Results
+    👨‍💻 Participant
+      Join LAN
+      Login
+      Read Problems
+      Submit Code
+      View Verdict
+      View Leaderboard
+    ⚙️ System
+      Offline Hosting
+      Auto Testcase Verification
+      Timestamp Tracking
+      Live Leaderboard
+      Manual Review
+```
 
 - **Organizer**: Create Contest, Upload Problems, Start Contest, Review Submissions, Publish Results
 - **Participant**: Join LAN, Login, Read Problems, Submit Code, View Verdict, View Leaderboard
