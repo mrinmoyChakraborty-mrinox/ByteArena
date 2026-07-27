@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BYTEARENA — by BYTEMONK</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#050508;color:#e4e4e7;line-height:1.7;overflow-x:hidden;min-height:100vh}
+::selection{background:#8b5cf680;color:#fff}
+
+/* ── Scroll ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#050508}
+::-webkit-scrollbar-thumb{background:#2a2a3e;border-radius:4px}
+
+/* ── BG ── */
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(139,92,246,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.035) 1px,transparent 1px);background-size:56px 56px}
+.glow{position:fixed;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0;opacity:.12}
+.glow--1{background:#8b5cf6;width:500px;height:500px;top:-15%;left:-8%;animation:drift 25s ease-in-out infinite}
+.glow--2{background:#06b6d4;width:450px;height:450px;bottom:-15%;right:-8%;animation:drift 25s ease-in-out infinite -8s}
+.glow--3{background:#f59e0b;width:600px;height:600px;top:40%;left:30%;animation:drift 30s ease-in-out infinite -16s;opacity:.05}
+@keyframes drift{0%,100%{transform:translate(0,0)}33%{transform:translate(50px,-70px)}66%{transform:translate(-40px,40px)}}
+
+/* ── Layout ── */
+.container{max-width:1120px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+section{padding:72px 0}
+.label{display:inline-block;font-size:.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#8b5cf6;background:#8b5cf614;padding:4px 14px;border-radius:100px;margin-bottom:12px}
+.sn{font-size:clamp(1.6rem,3.5vw,2.5rem);font-weight:800;margin-bottom:12px;background:linear-gradient(135deg,#f0f0f5 30%,#a78bfa 90%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em}
+.sub{font-size:1rem;color:#888;max-width:600px;margin-bottom:36px}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:#050508d9;border-bottom:1px solid #ffffff08;padding:0 24px}
+nav .container{display:flex;align-items:center;justify-content:space-between;height:60px;padding:0}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:1.05rem;text-decoration:none;color:#fff;letter-spacing:-.3px}
+.logo-em{background:linear-gradient(135deg,#8b5cf6,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo small{font-weight:400;font-size:.65rem;color:#888;letter-spacing:0;margin-left:2px}
+.nav-l{display:flex;gap:20px;list-style:none}
+.nav-l a{text-decoration:none;color:#888;font-size:.82rem;font-weight:500;transition:color .2s;position:relative}
+.nav-l a:hover{color:#fff}
+.nav-l a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1.5px;background:#8b5cf6;transition:width .2s}
+.nav-l a:hover::after{width:100%}
+.mob{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.mob span{display:block;width:22px;height:2px;background:#e4e4e7;border-radius:2px;transition:.3s}
+
+/* ── Hero ── */
+.hero{min-height:100vh;display:flex;align-items:center;padding-top:60px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 25% 50%,#8b5cf608,transparent),radial-gradient(ellipse 500px 400px at 75% 50%,#06b6d406,transparent)}
+.hero-c{position:relative;z-index:1;text-align:center;max-width:820px;margin:0 auto}
+.hero-b{display:inline-flex;align-items:center;gap:8px;background:#ffffff06;border:1px solid #ffffff0a;border-radius:100px;padding:5px 14px 5px 6px;font-size:.78rem;color:#888;margin-bottom:28px}
+.hero-b sp{background:#8b5cf6;color:#fff;font-size:.6rem;font-weight:700;padding:2px 10px;border-radius:100px;letter-spacing:.5px;margin-right:4px}
+.hero h1{font-size:clamp(2.4rem,6.5vw,4.5rem);font-weight:900;line-height:1.05;margin-bottom:16px;letter-spacing:-.035em}
+.hero h1 .g1{background:linear-gradient(135deg,#c084fc,#8b5cf6,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h1 .g2{background:linear-gradient(135deg,#f0f0f5 20%,#8b5cf6 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(1rem,1.8vw,1.15rem);color:#888;max-width:580px;margin:0 auto 32px;line-height:1.8}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 26px;border-radius:10px;font-weight:600;font-size:.88rem;text-decoration:none;cursor:pointer;border:none;transition:all .25s}
+.btn-p{background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;box-shadow:0 4px 20px #8b5cf635}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 30px #8b5cf650}
+.btn-g{background:#ffffff08;color:#e4e4e7;border:1px solid #ffffff12}
+.btn-g:hover{background:#ffffff10;transform:translateY(-2px)}
+
+/* ── Card ── */
+.card{background:linear-gradient(135deg,#ffffff06,#ffffff02);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid #ffffff0a;border-radius:18px;padding:28px;transition:all .35s}
+.card:hover{border-color:#ffffff16;transform:translateY(-3px);box-shadow:0 14px 48px #00000030}
+
+/* ── Grids ── */
+.g-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.g-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.g-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+
+/* ── Feature block ── */
+.f{border-radius:14px;padding:24px;background:#ffffff06;border:1px solid #ffffff08;transition:all .3s;position:relative;overflow:hidden}
+.f::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;background:linear-gradient(90deg,#8b5cf6,#6366f1,#06b6d4);opacity:0;transition:opacity .3s}
+.f:hover::before{opacity:1}
+.f:hover{background:#ffffff0a;border-color:#ffffff14;transform:translateY(-3px);box-shadow:0 10px 40px #00000020}
+.f .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:12px}
+.f h3{font-size:1rem;font-weight:700;margin-bottom:5px;color:#fff}
+.f p{font-size:.82rem;color:#888;line-height:1.6}
+.f .ch{display:inline-block;font-size:.65rem;font-weight:500;padding:2px 9px;border-radius:100px;margin-top:10px;background:#ffffff08;color:#888;border:1px solid #ffffff06}
+
+/* ── Icon colors ── */
+.ic-p{background:#8b5cf618;color:#a78bfa}
+.ic-c{background:#06b6d418;color:#67e8f9}
+.ic-a{background:#f59e0b18;color:#fbbf24}
+.ic-e{background:#10b98118;color:#6ee7b7}
+.ic-r{background:#ef444418;color:#fca5a5}
+.ic-k{background:#ec489918;color:#f9a8d4}
+
+/* ── Diagram ── */
+.dg{background:#ffffff04;border:1px solid #ffffff08;border-radius:14px;padding:32px 20px;text-align:center;overflow-x:auto}
+.db{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:10px;font-weight:600;font-size:.8rem;min-width:90px;border:1px solid;margin:3px}
+.dbs{background:#8b5cf618;border-color:#8b5cf635;color:#c084fc}
+.dbw{background:#06b6d418;border-color:#06b6d435;color:#67e8f9}
+.dbd{background:#f59e0b18;border-color:#f59e0b35;color:#fbbf24}
+.dbc{background:#10b98118;border-color:#10b98135;color:#6ee7b7}
+.dbq{background:#ec489918;border-color:#ec489935;color:#f9a8d4}
+.dar{display:inline-block;margin:0 6px;color:#3a3a4e;font-size:1.1rem}
+.dr{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;margin:5px 0}
+
+/* ── Stat ── */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:48px}
+.sc{text-align:center;padding:22px 14px;background:#ffffff04;border:1px solid #ffffff08;border-radius:14px;transition:all .3s}
+.sc:hover{border-color:#ffffff14;transform:translateY(-2px)}
+.sc .n{font-size:1.7rem;font-weight:800;background:linear-gradient(135deg,#f0f0f5,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sc .l{font-size:.78rem;color:#888;margin-top:3px}
+
+/* ── Table ── */
+.tw{overflow-x:auto;border:1px solid #ffffff08;border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{padding:12px 18px;text-align:left;font-weight:600;color:#888;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #ffffff08;background:#ffffff04}
+td{padding:12px 18px;border-bottom:1px solid #ffffff04;color:#d4d4d8}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#ffffff03}
+
+/* ── Timeline ── */
+.tl{position:relative;padding-left:36px}
+.tl::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#8b5cf6,#6366f1,#06b6d4)}
+.ti{position:relative;margin-bottom:36px;padding:22px;background:#ffffff04;border:1px solid #ffffff08;border-radius:14px;transition:all .3s}
+.ti:hover{border-color:#ffffff14;transform:translateX(4px)}
+.ti::before{content:'';position:absolute;left:-30px;top:24px;width:10px;height:10px;border-radius:50%;background:#8b5cf6;border:3px solid #050508;box-shadow:0 0 0 2px #8b5cf6}
+.ti:nth-child(2)::before{background:#6366f1;box-shadow:0 0 0 2px #6366f1}
+.ti:nth-child(3)::before{background:#06b6d4;box-shadow:0 0 0 2px #06b6d4}
+.ti .ph{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.ti:nth-child(1) .ph{color:#a78bfa}
+.ti:nth-child(2) .ph{color:#67e8f9}
+.ti:nth-child(3) .ph{color:#fbbf24}
+.ti h3{font-size:1.05rem;font-weight:700;margin-bottom:6px;color:#fff}
+.ti p{font-size:.82rem;color:#888;line-height:1.6}
+.ti .tg{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.ti .tg sp{font-size:.65rem;padding:2px 9px;border-radius:100px;background:#ffffff06;color:#888;border:1px solid #ffffff06}
+
+/* ── Workflow ── */
+.wf{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.ws{text-align:center;padding:22px 14px;background:#ffffff04;border:1px solid #ffffff08;border-radius:14px;transition:all .3s}
+.ws:hover{background:#ffffff08;border-color:#ffffff14}
+.ws .sn2{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;background:#8b5cf6;color:#fff;margin-bottom:10px}
+.ws h4{font-size:.85rem;font-weight:600;margin-bottom:3px;color:#fff}
+.ws p{font-size:.75rem;color:#888;line-height:1.5}
+
+/* ── Anti-cheat ── */
+.acg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.ac{padding:22px;background:#ffffff04;border:1px solid #ffffff08;border-radius:14px;transition:all .3s}
+.ac:hover{border-color:#ffffff14;transform:translateY(-2px)}
+.ac .lb{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 9px;border-radius:100px;margin-bottom:10px}
+.ac h4{font-size:.9rem;font-weight:700;margin-bottom:5px;color:#fff}
+.ac p{font-size:.78rem;color:#888;line-height:1.6}
+.ac code{font-size:.7rem;background:#ffffff06;padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;color:#a1a1aa}
+
+/* ── MVP ── */
+.mv{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.mc{padding:26px;background:#ffffff04;border:1px solid #ffffff08;border-radius:14px;transition:all .3s}
+.mc:hover{border-color:#ffffff14;transform:translateY(-2px)}
+.mc h3{font-size:.95rem;font-weight:700;margin-bottom:10px;color:#fff;display:flex;align-items:center;gap:8px}
+.mc ul{list-style:none;padding:0}
+.mc li{font-size:.82rem;color:#888;padding:5px 0;padding-left:18px;position:relative}
+.mc li::before{content:'▸';position:absolute;left:0;color:#8b5cf6}
+
+/* ── Tech ── */
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.tech-grid h4{font-size:.78rem;font-weight:600;margin-bottom:8px}
+.tech-grid .tg2{display:flex;flex-wrap:wrap;gap:5px;font-size:.74rem}
+.tech-grid .tg2 sp{background:#ffffff06;padding:3px 10px;border-radius:6px;color:#ccc;border:1px solid #ffffff06}
+
+/* ── Code block ── */
+.cb{background:#00000030;border:1px solid #ffffff08;border-radius:10px;padding:14px 18px;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#888;overflow-x:auto;line-height:1.8;margin:10px 0}
+
+/* ── Dashboard ── */
+.dg2{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+@media(max-width:768px){.dg2{grid-template-columns:1fr}}
+.di{background:#ffffff04;border:1px solid #ffffff08;border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;font-size:.82rem}
+.di .lb{color:#888;font-weight:500}
+.di .vl{font-weight:600;color:#fff}
+.dst{display:flex;align-items:center;gap:5px}
+.dst .dt{width:7px;height:7px;border-radius:50%}
+.dtg{background:#10b981;box-shadow:0 0 6px #10b98150}
+.dta{background:#f59e0b;box-shadow:0 0 6px #f59e0b50}
+
+/* ── Leaderboard mock ── */
+.lm td:first-child{font-weight:600;color:#fff}
+.lm .r1{color:#fbbf24}
+.lm .r2{color:#a1a1aa}
+.lm .r3{color:#d97706}
+
+/* ── Footer ── */
+footer{border-top:1px solid #ffffff08;padding:28px 0;text-align:center;font-size:.82rem;color:#52525b}
+
+/* ── Responsive ── */
+@media(max-width:860px){
+  section{padding:52px 0}
+  .nav-l{display:none;position:absolute;top:60px;left:0;right:0;background:#050508ea;backdrop-filter:blur(20px);flex-direction:column;padding:14px 24px;gap:14px;border-bottom:1px solid #ffffff08}
+  .nav-l.o{display:flex}
+  .mob{display:flex}
+  .card{padding:22px}
+  .tl{padding-left:28px}
+  .ti::before{left:-22px}
+}
+@media(max-width:480px){
+  .container{padding:0 16px}
+  .hero-btns{flex-direction:column;align-items:center}
+  .btn{width:100%;justify-content:center}
+  .sg{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── Anim ── */
+.fi{opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s ease}
+.fi.vi{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="glow glow--1"></div>
+<div class="glow glow--2"></div>
+<div class="glow glow--3"></div>
+
+<!-- ══ Navbar ══ -->
+<nav>
+  <div class="container">
+    <a href="#" class="logo">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="1.5" y="1.5" width="23" height="23" rx="5.5" stroke="url(#lg)" stroke-width="2"/><path d="M8 18V8l5 5 5-5v10" stroke="url(#lg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs></svg>
+      BYTE<span class="logo-em">ARENA</span> <small>by BYTEMONK</small>
+    </a>
+    <button class="mob" id="mb" aria-label="Menu"><span></span><span></span><span></span></button>
+    <ul class="nav-l" id="nl">
+      <li><a href="#about">About</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#security">Security</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══ Hero ══ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-c">
+      <div class="hero-b"><sp>NEW</sp> Offline-First · LAN-Powered · v1.0</div>
+      <h1><span class="g1">BYTEARENA</span><br><span class="g2">Offline LAN Contest<br>Platform</span></h1>
+      <p>A portable, offline-first competitive programming platform that lets colleges, schools, coding clubs, and hackathons run secure programming contests using nothing more than a laptop and a Wi-Fi router.</p>
+      <div class="hero-btns">
+        <a href="#about" class="btn btn-p">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.5v9M2.5 7h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Explore Platform
+        </a>
+        <a href="#features" class="btn btn-g">Key Features</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ About ══ -->
+<section id="about">
+  <div class="container">
+    <span class="label">About</span>
+    <h2 class="sn">What is BYTEARENA?</h2>
+    <p class="sub">A plug-and-play infrastructure for running competitive programming contests entirely offline. No cloud. No hosting. No internet. Just code.</p>
+
+    <div class="sg">
+      <div class="sc"><div class="n">100+</div><div class="l">Participants</div></div>
+      <div class="sc"><div class="n">2–5</div><div class="l">Hour Contests</div></div>
+      <div class="sc"><div class="n">5K</div><div class="l">Submissions</div></div>
+      <div class="sc"><div class="n">8</div><div class="l">Judge Workers</div></div>
+      <div class="sc"><div class="n">&lt;2s</div><div class="l">Leaderboard Delay</div></div>
+    </div>
+
+    <div class="g-3">
+      <div class="f">
+        <div class="ic ic-p">💻</div>
+        <h3>Organizer Laptop</h3>
+        <p>Runs the entire backend — contest server, judge worker, dashboard, and database. One machine does it all.</p>
+        <span class="ch">Contest Server</span>
+      </div>
+      <div class="f">
+        <div class="ic ic-c">📡</div>
+        <h3>Wi-Fi Router</h3>
+        <p>Creates the isolated LAN. Organizer connects via Ethernet for reliability; participants join over Wi-Fi.</p>
+        <span class="ch">No Internet WAN</span>
+      </div>
+      <div class="f">
+        <div class="ic ic-e">👨‍💻</div>
+        <h3>Participant Laptops</h3>
+        <p>Zero installation. Just a browser — Chrome or Firefox — pointed at the contest server's IP.</p>
+        <span class="ch">Browser Only</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Why LAN ══ -->
+<section style="padding-top:0">
+  <div class="container">
+    <span class="label">Why Offline</span>
+    <h2 class="sn">Why LAN Instead of Cloud?</h2>
+    <p class="sub">Traditional platforms depend on internet connectivity — which introduces cheating vectors, reliability issues, and ongoing costs.</p>
+
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#fca5a5">❌ Cloud Problems</h3>
+          <ul style="list-style:none">
+            <li style="padding:7px 0;font-size:.85rem;color:#a1a1aa;border-bottom:1px solid #ffffff06">🔍 Participants can search Google</li>
+            <li style="padding:7px 0;font-size:.85rem;color:#a1a1aa;border-bottom:1px solid #ffffff06">🤖 Participants can use ChatGPT</li>
+            <li style="padding:7px 0;font-size:.85rem;color:#a1a1aa;border-bottom:1px solid #ffffff06">🌐 Internet reliability is a dependency</li>
+            <li style="padding:7px 0;font-size:.85rem;color:#a1a1aa">💰 Hosting costs keep adding up</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#6ee7b7">✅ BYTEARENA Solution</h3>
+          <ul style="list-style:none">
+            <li style="padding:7px 0;font-size:.85rem;color:#a1a1aa;border-bottom:1px solid #ffffff06">🔒 Contest exists only on LAN</li>
+            <li style="padding:7px 0;font-size:.85rem;color:#a1a1aa;border-bottom:1px solid #ffffff06">⚡ Disconnect Wi-Fi → contest disappears</li>
+            <li style="padding:7px 0;font-size:.85rem;color:#a1a1aa;border-bottom:1px solid #ffffff06">📦 Zero hosting infrastructure</li>
+            <li style="padding:7px 0;font-size:.85rem;color:#a1a1aa">🆓 Completely free to run</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Architecture ══ -->
+<section id="architecture" style="padding-top:48px">
+  <div class="container">
+    <span class="label">Architecture</span>
+    <h2 class="sn">How It Works</h2>
+    <p class="sub">A clean client-server architecture with a decoupled judge worker for scalable, isolated code verification.</p>
+
+    <div class="dg mb-32">
+      <svg viewBox="0 0 680 220" style="max-width:680px;width:100%;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs>
+        <rect x="280" y="10" width="120" height="50" rx="10" fill="#8b5cf618" stroke="#8b5cf635" stroke-width="1.5"/>
+        <text x="340" y="34" text-anchor="middle" fill="#c084fc" font-size="13" font-weight="600" font-family="Inter,sans-serif">🌐 Browser</text>
+        <text x="340" y="50" text-anchor="middle" fill="#52525b" font-size="9" font-family="Inter,sans-serif">Participants</text>
+        <line x1="340" y1="60" x2="340" y2="92" stroke="#ffffff10" stroke-width="1.5"/>
+        <line x1="340" y1="92" x2="180" y2="130" stroke="#8b5cf635" stroke-width="1.5"/>
+        <line x1="340" y1="92" x2="500" y2="130" stroke="#06b6d435" stroke-width="1.5"/>
+        <line x1="340" y1="92" x2="340" y2="130" stroke="#f59e0b35" stroke-width="1.5"/>
+        <rect x="100" y="126" width="160" height="50" rx="10" fill="#10b98118" stroke="#10b98135" stroke-width="1.5"/>
+        <text x="180" y="152" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="600" font-family="Inter,sans-serif">🖥️ Contest Server</text>
+        <text x="180" y="168" text-anchor="middle" fill="#52525b" font-size="9" font-family="Inter,sans-serif">Auth · Timer · API · WS</text>
+        <rect x="420" y="126" width="160" height="50" rx="10" fill="#06b6d418" stroke="#06b6d435" stroke-width="1.5"/>
+        <text x="500" y="148" text-anchor="middle" fill="#67e8f9" font-size="11" font-weight="600" font-family="Inter,sans-serif">⚖️ Judge Worker</text>
+        <text x="500" y="166" text-anchor="middle" fill="#52525b" font-size="9" font-family="Inter,sans-serif">Compile · Test · Verify</text>
+        <rect x="280" y="126" width="120" height="50" rx="10" fill="#f59e0b18" stroke="#f59e0b35" stroke-width="1.5"/>
+        <text x="340" y="148" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600" font-family="Inter,sans-serif">🗄️ Database</text>
+        <text x="340" y="166" text-anchor="middle" fill="#52525b" font-size="9" font-family="Inter,sans-serif">SQLite / PostgreSQL</text>
+        <line x1="180" y1="176" x2="340" y2="176" stroke="#ffffff08" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="340" y1="176" x2="500" y2="176" stroke="#ffffff08" stroke-width="1" stroke-dasharray="4,3"/>
+      </svg>
+    </div>
+
+    <div class="g-3">
+      <div class="card">
+        <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px;color:#fff">🖥️ Contest Server</h3>
+        <p style="font-size:.82rem;color:#888;line-height:1.7">Handles authentication, contest timer, problem distribution, submission intake, leaderboard generation, organizer dashboard, and WebSocket push for live updates.</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px;color:#fff">⚖️ Judge Worker</h3>
+        <p style="font-size:.82rem;color:#888;line-height:1.7">An independent service that picks submissions from a queue, compiles the code, runs hidden testcases, compares output, and returns a verdict — scalable to multiple workers.</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px;color:#fff">📤 Submission Pipeline</h3>
+        <p style="font-size:.82rem;color:#888;line-height:1.7">Submit → Queue → Judge → Compile → Run tests → Compare → Verdict → Leaderboard update. End-to-end in under 2 seconds with 4–8 workers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Network Graph ══ -->
+<section style="padding-top:0">
+  <div class="container">
+    <span class="label">Network</span>
+    <h2 class="sn">Network Topology</h2>
+    <p class="sub">Simple, reliable, and fully isolated — just a router, an organizer machine, and participant laptops.</p>
+
+    <div class="dg">
+      <svg viewBox="0 0 620 200" style="max-width:620px;width:100%;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+        <rect x="250" y="10" width="120" height="54" rx="10" fill="#8b5cf618" stroke="#8b5cf635" stroke-width="1.5"/>
+        <text x="310" y="34" text-anchor="middle" fill="#c084fc" font-size="13" font-weight="600" font-family="Inter,sans-serif">📡 LAN Router</text>
+        <text x="310" y="54" text-anchor="middle" fill="#52525b" font-size="9" font-family="Inter,sans-serif">No Internet WAN</text>
+        <line x1="310" y1="64" x2="310" y2="96" stroke="#ffffff10" stroke-width="1.5"/>
+        <line x1="310" y1="96" x2="120" y2="140" stroke="#8b5cf640" stroke-width="2" stroke-dasharray="6,4"/>
+        <line x1="310" y1="96" x2="500" y2="140" stroke="#06b6d440" stroke-width="2" stroke-dasharray="3,5"/>
+        <rect x="30" y="136" width="180" height="56" rx="10" fill="#10b98118" stroke="#10b98135" stroke-width="1.5"/>
+        <text x="120" y="162" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="600" font-family="Inter,sans-serif">🖥️ Organizer Laptop</text>
+        <text x="120" y="182" text-anchor="middle" fill="#52525b" font-size="9" font-family="Inter,sans-serif">RJ45 · contest.local</text>
+        <rect x="420" y="136" width="160" height="56" rx="10" fill="#06b6d418" stroke="#06b6d435" stroke-width="1.5"/>
+        <text x="500" y="162" text-anchor="middle" fill="#67e8f9" font-size="12" font-weight="600" font-family="Inter,sans-serif">👥 Participants</text>
+        <text x="500" y="182" text-anchor="middle" fill="#52525b" font-size="9" font-family="Inter,sans-serif">Wi-Fi · Browser</text>
+      </svg>
+      <p style="font-size:.78rem;color:#52525b;margin-top:14px">Organizer on Ethernet (RJ45) · Participants on Wi-Fi · No internet access</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Contest Workflow ══ -->
+<section style="padding-top:0">
+  <div class="container">
+    <span class="label">Workflow</span>
+    <h2 class="sn">Contest Lifecycle</h2>
+    <p class="sub">From setup to final results — every stage is designed for a smooth, fair contest experience.</p>
+
+    <div class="wf">
+      <div class="ws"><div class="sn2">01</div><h4>Create Contest</h4><p>Set name, duration, and problem set</p></div>
+      <div class="ws"><div class="sn2">02</div><h4>Upload Problems</h4><p>Add statements, testcases, config</p></div>
+      <div class="ws"><div class="sn2">03</div><h4>Start Server</h4><p>Launch on organizer machine</p></div>
+      <div class="ws"><div class="sn2">04</div><h4>Join Wi-Fi</h4><p>Connect to LAN router</p></div>
+      <div class="ws"><div class="sn2">05</div><h4>Login &amp; Compete</h4><p>Solve problems, submit code</p></div>
+      <div class="ws"><div class="sn2">06</div><h4>Auto Judge</h4><p>Compile, test, generate verdict</p></div>
+      <div class="ws"><div class="sn2">07</div><h4>Live Leaderboard</h4><p>Real-time rank updates</p></div>
+      <div class="ws"><div class="sn2">08</div><h4>Review &amp; Publish</h4><p>Manual review, final results</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Features ══ -->
+<section id="features">
+  <div class="container">
+    <span class="label">Features</span>
+    <h2 class="sn">Everything You Need</h2>
+    <p class="sub">BYTEARENA packages an entire contest infrastructure into a single deployable system.</p>
+
+    <div class="g-3">
+      <div class="f">
+        <div class="ic ic-p">⏱️</div>
+        <h3>Scoring System</h3>
+        <p>Every submission timestamped. Leaderboard ranks by problems solved and first-accepted time. Future ICPC-style penalties.</p>
+      </div>
+      <div class="f">
+        <div class="ic ic-e">🏆</div>
+        <h3>Live Leaderboard</h3>
+        <p>WebSocket-driven real-time updates. Participants see rank changes instantly as the judge returns verdicts.</p>
+      </div>
+      <div class="f">
+        <div class="ic ic-a">🔍</div>
+        <h3>Manual Review</h3>
+        <p>Organizer can review every submission — source code, execution stats, timeline — then approve, reject, or flag.</p>
+      </div>
+      <div class="f">
+        <div class="ic ic-c">🖥️</div>
+        <h3>Organizer Dashboard</h3>
+        <p>Live view of timer, participants, submissions, judge queue, server health, and warnings — all in one place.</p>
+      </div>
+      <div class="f">
+        <div class="ic ic-k">📊</div>
+        <h3>Connection Monitoring</h3>
+        <p>Heartbeat system and browser event logging. Know instantly who disconnects, switches tabs, or exits fullscreen.</p>
+      </div>
+      <div class="f">
+        <div class="ic ic-r">🛡️</div>
+        <h3>Anti-Cheating</h3>
+        <p>Four layers of protection: LAN isolation, heartbeat, browser event logging, and internet detection.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Scoring + Leaderboard ══ -->
+<section style="padding-top:0">
+  <div class="container">
+    <div class="g-2">
+      <div class="card">
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;color:#fff">⏱️ Scoring Example</h3>
+        <div class="cb" style="font-size:.74rem">
+10:00 ─ Contest Starts<br><br>
+<span style="color:#a78bfa">Alice</span><br>
+&nbsp;&nbsp;10:07 &nbsp;<span style="color:#fca5a5">WA</span><br>
+&nbsp;&nbsp;10:11 &nbsp;<span style="color:#fca5a5">WA</span><br>
+&nbsp;&nbsp;10:18 &nbsp;<span style="color:#6ee7b7">AC</span><br><br>
+<span style="color:#52525b">First Accepted Time → 18 min</span>
+        </div>
+        <p style="font-size:.78rem;color:#888;margin-top:10px">All submissions stored permanently. Leaderboard uses first AC time. ICPC penalties coming in Phase 3.</p>
+      </div>
+      <div class="card">
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;color:#fff">🏆 Leaderboard</h3>
+        <div class="tw" style="border:none;border-radius:0">
+          <table class="lm">
+            <thead><tr><th>Rank</th><th>Name</th><th>Solved</th><th>Time</th></tr></thead>
+            <tbody>
+              <tr><td class="r1">🥇 1</td><td>Alice</td><td>4</td><td>98</td></tr>
+              <tr><td class="r2">🥈 2</td><td>Bob</td><td>4</td><td>115</td></tr>
+              <tr><td class="r3">🥉 3</td><td>Charlie</td><td>3</td><td>80</td></tr>
+              <tr><td>4</td><td>Diana</td><td>2</td><td>45</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:.78rem;color:#888;margin-top:10px">Updates in real-time via WebSockets. No page refresh needed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Dashboard Preview ══ -->
+<section style="padding-top:0">
+  <div class="container">
+    <span class="label">Dashboard</span>
+    <h2 class="sn">Organizer Dashboard</h2>
+    <p class="sub">Real-time visibility into every aspect of the contest — participants, submissions, verdicts, and system health.</p>
+
+    <div class="dg2">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="di"><span class="lb">⏱️ Contest Timer</span><span class="vl">02:34:15</span></div>
+        <div class="di"><span class="lb">👥 Participants Online</span><span class="vl">28 / 32</span></div>
+        <div class="di"><span class="lb">📤 Recent Submissions</span><span class="vl">147 total · 12 pending</span></div>
+        <div class="di"><span class="lb">⚖️ Judge Queue</span><span class="dst"><span class="dt dtg"></span> 4 workers · 3 queued</span></div>
+        <div class="di"><span class="lb">🖥️ Server Health</span><span class="dst"><span class="dt dtg"></span> CPU 23% · RAM 1.8 GB</span></div>
+      </div>
+      <div style="background:#ffffff04;border:1px solid #ffffff08;border-radius:10px;padding:14px">
+        <h4 style="font-size:.76rem;font-weight:600;color:#888;margin-bottom:10px">PARTICIPANT STATUS</h4>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:.78rem">
+            <span style="display:flex;align-items:center;gap:5px"><span class="dt dtg"></span> Alice</span>
+            <span style="color:#52525b;font-size:.68rem">8 subs · 0 warns</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:.78rem">
+            <span style="display:flex;align-items:center;gap:5px"><span class="dt dtg"></span> Bob</span>
+            <span style="color:#52525b;font-size:.68rem">5 subs · 0 warns</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:.78rem">
+            <span style="display:flex;align-items:center;gap:5px"><span class="dt dta"></span> Charlie</span>
+            <span style="color:#52525b;font-size:.68rem">12 subs · 2 warns</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Security ══ -->
+<section id="security">
+  <div class="container">
+    <span class="label">Security</span>
+    <h2 class="sn">Anti-Cheating Strategy</h2>
+    <p class="sub">Rather than relying on impossible browser restrictions, BYTEARENA combines multiple practical layers that together create a fair contest environment.</p>
+
+    <div class="acg">
+      <div class="ac">
+        <span class="lb" style="background:#8b5cf618;color:#a78bfa">Layer 1</span>
+        <h4>📡 LAN Isolation</h4>
+        <p>Contest exists only inside the local network. Disconnect from Wi-Fi and the entire contest disappears — no problems, no submissions, no leaderboard.</p>
+      </div>
+      <div class="ac">
+        <span class="lb" style="background:#06b6d418;color:#67e8f9">Layer 2</span>
+        <h4>💓 Heartbeat</h4>
+        <p>Browser sends <code>POST /heartbeat</code> every few seconds. Organizer sees instantly who disconnects or has an unstable connection.</p>
+      </div>
+      <div class="ac">
+        <span class="lb" style="background:#f59e0b18;color:#fbbf24">Layer 3</span>
+        <h4>📋 Browser Events</h4>
+        <p>Tab switches, window blurs, and fullscreen exits are logged and displayed live on the organizer dashboard with timestamps.</p>
+      </div>
+      <div class="ac">
+        <span class="lb" style="background:#10b98118;color:#6ee7b7">Layer 4</span>
+        <h4>🌐 Internet Detection</h4>
+        <p>Browser periodically probes a public endpoint. If reachable, a warning is flagged on the dashboard and participant's screen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Roadmap ══ -->
+<section id="roadmap">
+  <div class="container">
+    <span class="label">Roadmap</span>
+    <h2 class="sn">Development Plan</h2>
+    <p class="sub">Three phases from core MVP to a fully-featured offline contest infrastructure.</p>
+
+    <div class="tl">
+      <div class="ti">
+        <div class="ph">Phase 1 — MVP</div>
+        <h3>Core Platform</h3>
+        <p>Contest creation, LAN hosting, login, problem viewing, code submission, automatic judging, leaderboard, and manual review — everything needed to run a real contest.</p>
+        <div class="tg"><sp>Contest Creation</sp><sp>LAN Hosting</sp><sp>Login</sp><sp>Auto Judge</sp><sp>Leaderboard</sp><sp>Manual Review</sp></div>
+      </div>
+      <div class="ti">
+        <div class="ph">Phase 2 — Enhancement</div>
+        <h3>Quality of Life</h3>
+        <p>Captive portal for seamless network discovery, practice mode, clarification requests between participants and organizers, contest templates, and mDNS auto-discovery.</p>
+        <div class="tg"><sp>Captive Portal</sp><sp>Practice Mode</sp><sp>Clarifications</sp><sp>Templates</sp><sp>mDNS Discovery</sp></div>
+      </div>
+      <div class="ti">
+        <div class="ph">Phase 3 — Advanced</div>
+        <h3>Production Ready</h3>
+        <p>Docker sandboxing for secure code execution, multi-worker judge pool, plagiarism detection, ICPC penalty scoring, contest import/export, and analytics dashboard.</p>
+        <div class="tg"><sp>Docker Sandbox</sp><sp>Plagiarism Detection</sp><sp>ICPC Penalties</sp><sp>Analytics</sp><sp>Import/Export</sp></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ MVP ══ -->
+<section id="mvp" style="padding-top:0">
+  <div class="container">
+    <span class="label">MVP</span>
+    <h2 class="sn">MVP Deliverables</h2>
+    <p class="sub">The minimum viable product covers the complete organizer and participant experience from end to end.</p>
+
+    <div class="mv">
+      <div class="mc">
+        <h3>🛠️ Organizer</h3>
+        <ul>
+          <li>Create Contest</li>
+          <li>Upload Problems</li>
+          <li>Start Contest</li>
+          <li>Review Submissions</li>
+          <li>Publish Results</li>
+        </ul>
+      </div>
+      <div class="mc">
+        <h3>👨‍💻 Participant</h3>
+        <ul>
+          <li>Join LAN</li>
+          <li>Login</li>
+          <li>Read Problems</li>
+          <li>Submit Code</li>
+          <li>View Verdict</li>
+          <li>View Leaderboard</li>
+        </ul>
+      </div>
+      <div class="mc">
+        <h3>⚙️ System</h3>
+        <ul>
+          <li>Offline Hosting</li>
+          <li>Auto Testcase Verification</li>
+          <li>Timestamp Tracking</li>
+          <li>Live Leaderboard</li>
+          <li>Manual Review</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Tech Stack ══ -->
+<section style="padding-top:0">
+  <div class="container">
+    <div class="card">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:16px;color:#fff">💻 Tech Stack</h3>
+      <div class="tech-grid">
+        <div>
+          <h4 style="color:#a78bfa">Backend</h4>
+          <div class="tg2"><sp>FastAPI</sp><sp>SQLAlchemy</sp><sp>SQLite (MVP)</sp><sp>PostgreSQL</sp><sp>WebSockets</sp></div>
+        </div>
+        <div>
+          <h4 style="color:#67e8f9">Frontend</h4>
+          <div class="tg2"><sp>React</sp><sp>TailwindCSS</sp><sp>Monaco Editor</sp><sp>React Query</sp></div>
+        </div>
+        <div>
+          <h4 style="color:#fbbf24">Judge &amp; Networking</h4>
+          <div class="tg2"><sp>Python</sp><sp>Queue System</sp><sp>Multi-Worker</sp><sp>Docker (P3)</sp><sp>mDNS</sp></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Project Structure ══ -->
+<section style="padding-top:0">
+  <div class="container">
+    <span class="label">Structure</span>
+    <h2 class="sn">Project Layout</h2>
+    <p class="sub">Clean, extensible directory structure organized by problem sets, participants, and system components.</p>
+
+    <div class="cb" style="max-width:440px;margin:0 auto;font-size:.72rem">
+Contest/<br>
+├── <span style="color:#a78bfa">Problems/</span><br>
+│   ├── <span style="color:#67e8f9">A/</span><br>
+│   │   ├── statement.md<br>
+│   │   ├── tests/<br>
+│   │   └── config.json<br>
+│   ├── <span style="color:#67e8f9">B/</span><br>
+│   └── <span style="color:#67e8f9">C/</span><br>
+├── <span style="color:#a78bfa">Submissions/</span><br>
+│   ├── <span style="color:#67e8f9">Alice/</span><br>
+│   └── <span style="color:#67e8f9">Bob/</span><br>
+├── <span style="color:#a78bfa">Database/</span><br>
+├── <span style="color:#a78bfa">Logs/</span><br>
+└── <span style="color:#a78bfa">Config/</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Footer ══ -->
+<footer>
+  <div class="container">
+    <p style="margin-bottom:4px;font-weight:500;color:#888">BYTE<span style="background:linear-gradient(135deg,#8b5cf6,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">ARENA</span> <span style="color:#52525b">by BYTEMONK</span></p>
+    <p>No Cloud. No Internet. Just Code.</p>
+  </div>
+</footer>
+
+<script>
+document.getElementById('mb').addEventListener('click',function(){document.getElementById('nl').classList.toggle('o')});
+document.querySelectorAll('.nav-l a').forEach(function(a){a.addEventListener('click',function(){document.getElementById('nl').classList.remove('o')})});
+var sec=document.querySelectorAll('section[id]'),lk=document.querySelectorAll('.nav-l a');
+window.addEventListener('scroll',function(){var c='';sec.forEach(function(s){if(window.scrollY>=s.offsetTop-120)c=s.getAttribute('id')});lk.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+c)})});
+var ob=new IntersectionObserver(function(e){e.forEach(function(e){if(e.isIntersecting)e.target.classList.add('vi')})},{threshold:.08});
+document.querySelectorAll('.card,.f,.sc,.ws,.ac,.mc,.ti,.di').forEach(function(el){el.classList.add('fi');ob.observe(el)});
+</script>
+
+</body>
+</html>

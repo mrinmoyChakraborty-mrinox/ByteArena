@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BYTEARENA — by BYTEMONK</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={
+  theme:{
+    extend:{
+      colors:{
+        arena:{900:'var(--bg)',800:'var(--bg-elevated)',700:'var(--bg-elevated-hover)',600:'#1a1a2e',500:'#2a2a3e',400:'#3b3b4e',300:'#6b6b7e',200:'var(--text-secondary)',100:'#d4d4d8',50:'var(--text)'},
+        bolt:{DEFAULT:'#5727CC',light:'#8b5cf6',lighter:'#a78bfa',dark:'#4B22B5'},
+        cyber:{DEFAULT:'#71B1C6',light:'#91DDFB',lighter:'#97E6FF',dark:'#489CB7'},
+      },
+      fontFamily:{sans:['Inter',...tailwind.defaultConfig.theme.fontFamily.sans],mono:['JetBrains Mono',...tailwind.defaultConfig.theme.fontFamily.mono]},
+    }
+  }
+}
+</script>
+<style>
+:root {
+  --bg: #050508;
+  --bg2: #0a0a12;
+  --bg-elevated: rgba(255,255,255,0.04);
+  --bg-elevated-hover: rgba(255,255,255,0.08);
+  --bg-glass: rgba(255,255,255,0.03);
+  --bg-glass-border: rgba(255,255,255,0.10);
+  --text: #e4e4e7;
+  --text-secondary: #888;
+  --text-muted: #52525b;
+  --border: rgba(255,255,255,0.05);
+  --border-hover: rgba(255,255,255,0.10);
+  --border-active: rgba(255,255,255,0.14);
+  --code-bg: rgba(0,0,0,0.30);
+  --nav-bg: rgba(5,5,8,0.85);
+  --gradient-text: linear-gradient(135deg,#f0f0f5 30%,#a78bfa 90%);
+  --gradient-hero: radial-gradient(ellipse 600px 400px at 25% 50%,#5727CC08,transparent),radial-gradient(ellipse 500px 400px at 75% 50%,#91DDFB06,transparent);
+  --shadow-card: 0 14px 48px rgba(0,0,0,0.2);
+  --shadow-card-hover: 0 14px 48px rgba(0,0,0,0.3);
+  --stat-bg: rgba(255,255,255,0.04);
+  --table-hover: rgba(255,255,255,0.03);
+  --leader-gold: #fbbf24;
+  --leader-silver: #a1a1aa;
+  --leader-bronze: #d97706;
+}
+
+html.light {
+  --bg: #eeeff1;
+  --bg2: #f8f9fb;
+  --bg-elevated: #ffffff;
+  --bg-elevated-hover: #f4f5f7;
+  --bg-glass: #ffffff;
+  --bg-glass-border: #d8dce3;
+  --text: #14141f;
+  --text-secondary: #555d6b;
+  --text-muted: #8e96a3;
+  --border: #d8dce3;
+  --border-hover: #c1c7cf;
+  --border-active: #a0aab5;
+  --code-bg: #f0f1f3;
+  --nav-bg: rgba(238,239,241,0.92);
+  --gradient-text: linear-gradient(135deg,#14141f 25%,#7c3aed 90%);
+  --gradient-hero: radial-gradient(ellipse 550px 380px at 25% 50%,#8b5cf610,transparent),radial-gradient(ellipse 450px 380px at 75% 50%,#91DDFB10,transparent);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.02);
+  --shadow-card-hover: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.04);
+  --stat-bg: #ffffff;
+  --table-hover: rgba(0,0,0,0.03);
+  --leader-gold: #b45309;
+  --leader-silver: #52525b;
+  --leader-bronze: #92400e;
+}
+
+html.light .rounded-\[18px\] { background: linear-gradient(135deg, #ffffff, #fafbfc); }
+html.light .rounded-\[14px\] { background: linear-gradient(135deg, #ffffff, #f8f9fb); }
+html.light section[id] .rounded-\[14px\], html.light section[id] .rounded-\[18px\] { box-shadow: var(--shadow-card); }
+html.light .btn-17 { background: linear-gradient(135deg, #1e1b4b, #312e81); border-color: #312e81; box-shadow: 0 2px 8px rgba(49,46,129,0.25), 0 4px 16px rgba(49,46,129,0.1); }
+html.light .theme-toggle { background: linear-gradient(135deg, #ffffff, #f0f1f3); box-shadow: 0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8); }
+html.light .theme-toggle:hover { background: linear-gradient(135deg, #f4f5f7, #e8eaed); }
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;min-height:100vh;line-height:1.7;transition:background .35s ease,color .35s ease}
+::selection{background:#8b5cf680;color:#fff}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#2a2a3e;border-radius:4px}
+html.light ::-webkit-scrollbar-thumb{background:#c4c4c4}
+
+@keyframes drift{0%,100%{transform:translate(0,0)}33%{transform:translate(50px,-70px)}66%{transform:translate(-40px,40px)}}
+@keyframes move-up-alternate{0%{transform:translateY(0)}50%{transform:translateY(80%)}51%{transform:translateY(-80%)}to{transform:translateY(0)}}
+@keyframes fi{to{opacity:1;transform:translateY(0)}}
+
+.btn-17{border-radius:99rem;border-width:2px;padding:.8rem 3rem;z-index:0;overflow:hidden;position:relative;background:#000;color:#fff;font-weight:900;text-transform:uppercase;cursor:pointer;border-color:#fff;-webkit-tap-highlight-color:transparent;transition:background .35s}
+html.light .btn-17{background:#1a1a2e;border-color:#1a1a2e}
+.btn-17 .text-container{display:block;mix-blend-mode:difference;overflow:hidden;position:relative}
+.btn-17 .text{display:block;position:relative}
+.btn-17:hover .text{animation:move-up-alternate .3s forwards}
+.btn-17:after,.btn-17:before{--skew:0.2;background:#fff;content:"";display:block;height:102%;left:calc(-50% - 50%*var(--skew));pointer-events:none;position:absolute;top:-104%;transform:skew(calc(150deg*var(--skew))) translateY(var(--progress,0));transition:transform .2s ease;width:100%}
+.btn-17:after{--progress:0%;left:calc(50% + 50%*var(--skew));top:102%;z-index:-1}
+.btn-17:hover:before{--progress:100%}
+.btn-17:hover:after{--progress:-102%}
+
+.theme-toggle{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);transition:all .3s;font-size:1.15rem;position:relative;overflow:hidden}
+.theme-toggle:hover{background:var(--bg-elevated-hover);color:var(--text);border-color:var(--border-hover)}
+.theme-toggle .icon{position:absolute;transition:all .35s cubic-bezier(.4,0,.2,1)}
+.theme-toggle .sun{opacity:0;transform:rotate(90deg) scale(0)}
+.theme-toggle .moon{opacity:1;transform:rotate(0) scale(1)}
+html.light .theme-toggle .sun{opacity:1;transform:rotate(0) scale(1)}
+html.light .theme-toggle .moon{opacity:0;transform:rotate(-90deg) scale(0)}
+
+.fi{opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s ease}
+.fi.vi{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="fixed inset-0 pointer-events-none z-0 transition-opacity duration-[350ms]" style="background-image:linear-gradient(rgba(87,39,204,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(87,39,204,.035) 1px,transparent 1px);background-size:56px 56px"></div>
+<div class="glow-orb fixed rounded-full pointer-events-none z-0 transition-all duration-[600ms]" style="background:#5727CC;width:500px;height:500px;top:-15%;left:-8%;filter:blur(140px);animation:drift 25s ease-in-out infinite;opacity:0.10"></div>
+<div class="glow-orb fixed rounded-full pointer-events-none z-0 transition-all duration-[600ms]" style="background:#91DDFB;width:450px;height:450px;bottom:-15%;right:-8%;filter:blur(140px);animation:drift 25s ease-in-out infinite -8s;opacity:0.08"></div>
+<div class="glow-orb fixed rounded-full pointer-events-none z-0 transition-all duration-[600ms]" style="background:#97E6FF;width:600px;height:600px;top:40%;left:30%;filter:blur(140px);animation:drift 30s ease-in-out infinite -16s;opacity:0.04"></div>
+
+<style>.glow-orb{opacity:0.10 !important}html.light .glow-orb{opacity:0 !important}</style>
+
+<!-- ═══ Navbar ═══ -->
+<nav class="fixed top-0 left-0 right-0 z-[100] backdrop-blur-[24px] border-b transition-all duration-[350ms]" style="background:var(--nav-bg);border-color:var(--border)">
+  <div class="max-w-[1120px] mx-auto px-6 flex items-center justify-between h-[60px]">
+    <a href="#" class="flex items-center gap-2 no-underline font-extrabold text-[1.05rem] tracking-tight" style="color:var(--text)">
+      BYTE<span class="bg-gradient-to-r from-[#8b5cf6] to-[#5727CC] bg-clip-text text-transparent">ARENA</span>
+      <span class="font-normal text-[.65rem] ml-0.5 transition-colors duration-[350ms]" style="color:var(--text-muted)">by BYTEMONK</span>
+    </a>
+    <div class="flex items-center gap-3">
+      <ul class="flex gap-5 list-none max-md:hidden">
+        <li><a href="#about" class="no-underline text-[.82rem] font-medium transition-colors duration-200 relative after:content-[''] after:absolute after:-bottom-[3px] after:left-0 after:w-0 after:h-[1.5px] after:bg-[#8b5cf6] after:transition-all after:duration-200 hover:after:w-full" style="color:var(--text-secondary);--hover-c:var(--text)">About</a></li>
+        <li><a href="#architecture" class="no-underline text-[.82rem] font-medium transition-colors duration-200 relative after:content-[''] after:absolute after:-bottom-[3px] after:left-0 after:w-0 after:h-[1.5px] after:bg-[#8b5cf6] after:transition-all after:duration-200 hover:after:w-full" style="color:var(--text-secondary)">Architecture</a></li>
+        <li><a href="#features" class="no-underline text-[.82rem] font-medium transition-colors duration-200 relative after:content-[''] after:absolute after:-bottom-[3px] after:left-0 after:w-0 after:h-[1.5px] after:bg-[#8b5cf6] after:transition-all after:duration-200 hover:after:w-full" style="color:var(--text-secondary)">Features</a></li>
+        <li><a href="#security" class="no-underline text-[.82rem] font-medium transition-colors duration-200 relative after:content-[''] after:absolute after:-bottom-[3px] after:left-0 after:w-0 after:h-[1.5px] after:bg-[#8b5cf6] after:transition-all after:duration-200 hover:after:w-full" style="color:var(--text-secondary)">Security</a></li>
+        <li><a href="#roadmap" class="no-underline text-[.82rem] font-medium transition-colors duration-200 relative after:content-[''] after:absolute after:-bottom-[3px] after:left-0 after:w-0 after:h-[1.5px] after:bg-[#8b5cf6] after:transition-all after:duration-200 hover:after:w-full" style="color:var(--text-secondary)">Roadmap</a></li>
+        <li><a href="#mvp" class="no-underline text-[.82rem] font-medium transition-colors duration-200 relative after:content-[''] after:absolute after:-bottom-[3px] after:left-0 after:w-0 after:h-[1.5px] after:bg-[#8b5cf6] after:transition-all after:duration-200 hover:after:w-full" style="color:var(--text-secondary)">MVP</a></li>
+      </ul>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <span class="icon sun">☀️</span>
+        <span class="icon moon">🌙</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ Hero ═══ -->
+<section class="min-h-screen flex items-center pt-[60px] relative overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none transition-all duration-[600ms]" style="background:var(--gradient-hero)"></div>
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10 w-full">
+    <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      <div class="flex-1 text-center lg:text-left">
+        <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[.78rem] mb-7 transition-all duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary)">
+          <span class="bg-[#5727CC] text-white text-[.6rem] font-bold px-2.5 py-0.5 rounded-full tracking-wider">NEW</span>
+          Offline-First · LAN-Powered · v1.0
+        </div>
+        <h1 class="font-black leading-[1.05] mb-4 tracking-[-.035em]" style="font-size:clamp(2.2rem,5.5vw,4rem)">
+          <span class="bg-gradient-to-r from-[#97E6FF] via-[#91DDFB] to-[#8b5cf6] bg-clip-text text-transparent">BYTEARENA</span><br>
+          <span style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Offline LAN Contest<br>Platform</span>
+        </h1>
+        <p class="max-w-[540px] mx-auto lg:mx-0 mb-8 leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary);font-size:clamp(.95rem,1.6vw,1.1rem)">A portable, offline-first competitive programming platform that lets colleges, schools, coding clubs, and hackathons run secure programming contests using nothing more than a laptop and a Wi-Fi router.</p>
+        <div class="flex gap-3 justify-center lg:justify-start flex-wrap">
+          <a href="#about" class="btn-17 inline-flex text-sm no-underline">
+            <span class="text-container"><span class="text">Explore Platform</span></span>
+          </a>
+          <a href="#features" class="inline-flex items-center gap-2 px-6 py-3 rounded-[10px] font-semibold text-sm no-underline transition-all duration-250 hover:-translate-y-0.5" style="background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);--hover-bg:var(--bg-elevated-hover)">Key Features</a>
+        </div>
+      </div>
+      <div class="flex-1 flex justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" height="240" width="185" class="drop-shadow-[0_0_60px_rgba(87,39,204,.3)] transition-all duration-[600ms]">
+          <!-- glow behind -->
+          <defs>
+            <linearGradient id="sg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8b5cf6" stop-opacity=".15"/><stop offset="100%" stop-color="#5727CC" stop-opacity="0"/></linearGradient>
+            <linearGradient id="sg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#91DDFB" stop-opacity=".12"/><stop offset="100%" stop-color="#5727CC" stop-opacity="0"/></linearGradient>
+            <linearGradient id="sg3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#5727CC"/></linearGradient>
+            <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <!-- server rack body -->
+          <rect x="50" y="60" width="100" height="130" rx="10" fill="url(#sg1)" stroke="#8b5cf640" stroke-width="1.5"/>
+          <rect x="58" y="68" width="84" height="18" rx="4" fill="#8b5cf620" stroke="#8b5cf630" stroke-width="1"/>
+          <rect x="58" y="92" width="84" height="18" rx="4" fill="#8b5cf610" stroke="#8b5cf620" stroke-width="1"/>
+          <rect x="58" y="116" width="84" height="18" rx="4" fill="#8b5cf610" stroke="#8b5cf620" stroke-width="1"/>
+          <rect x="58" y="140" width="84" height="18" rx="4" fill="#8b5cf610" stroke="#8b5cf620" stroke-width="1"/>
+          <!-- drive slot indicators -->
+          <circle cx="70" cy="77" r="3" fill="#10b981" opacity="0.8"><animate attributeName="opacity" values="0.8;0.4;0.8" dur="2s" repeatCount="indefinite"/></circle>
+          <circle cx="82" cy="77" r="3" fill="#10b981" opacity="0.4"><animate attributeName="opacity" values="0.4;0.8;0.4" dur="2.3s" repeatCount="indefinite"/></circle>
+          <circle cx="94" cy="77" r="3" fill="#10b981" opacity="0.6"><animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.8s" repeatCount="indefinite"/></circle>
+          <!-- top blinkenlights -->
+          <circle cx="70" cy="101" r="3" fill="#f59e0b" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.5s" repeatCount="indefinite"/></circle>
+          <circle cx="82" cy="101" r="3" fill="#f59e0b" opacity="0.3"/>
+          <circle cx="94" cy="101" r="3" fill="#f59e0b" opacity="0.9"><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2.7s" repeatCount="indefinite"/></circle>
+          <circle cx="70" cy="125" r="3" fill="#06b6d4" opacity="0.5"><animate attributeName="opacity" values="0.5;0.1;0.5" dur="3s" repeatCount="indefinite"/></circle>
+          <circle cx="82" cy="125" r="3" fill="#06b6d4" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="2.1s" repeatCount="indefinite"/></circle>
+          <circle cx="94" cy="125" r="3" fill="#06b6d4" opacity="0.4"/>
+          <!-- blinking activity lights -->
+          <rect x="120" y="72" width="14" height="10" rx="2" fill="#06b6d420" stroke="#06b6d430" stroke-width="1">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="120" y="96" width="14" height="10" rx="2" fill="#8b5cf620" stroke="#8b5cf630" stroke-width="1">
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="1.7s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="120" y="120" width="14" height="10" rx="2" fill="#10b98120" stroke="#10b98130" stroke-width="1">
+            <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+          </rect>
+          <!-- network lines going up -->
+          <path d="M100 60 L100 30" stroke="#8b5cf640" stroke-width="2" stroke-dasharray="4,3">
+            <animate attributeName="stroke-dashoffset" values="0;-14" dur="1s" repeatCount="indefinite"/>
+          </path>
+          <path d="M70 30 Q70 15 100 15 Q130 15 130 30" stroke="#8b5cf630" stroke-width="2" fill="none" stroke-dasharray="5,3">
+            <animate attributeName="stroke-dashoffset" values="0;-16" dur="1.3s" repeatCount="indefinite"/>
+          </path>
+          <!-- signal waves from top -->
+          <path d="M85 20 Q90 10 95 20" stroke="#91DDFB50" stroke-width="1.5" fill="none" opacity="0.6">
+            <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/>
+          </path>
+          <path d="M80 12 Q90 0 100 12" stroke="#91DDFB40" stroke-width="1.5" fill="none" opacity="0.4">
+            <animate attributeName="opacity" values="0.4;0;0.4" dur="2.5s" repeatCount="indefinite"/>
+          </path>
+          <path d="M76 6 Q90 -10 104 6" stroke="#91DDFB30" stroke-width="1.5" fill="none" opacity="0.3">
+            <animate attributeName="opacity" values="0.3;0;0.3" dur="3s" repeatCount="indefinite"/>
+          </path>
+          <!-- floating circles / packets -->
+          <circle cx="85" cy="5" r="2.5" fill="#91DDFB">
+            <animate attributeName="cy" values="25;5;25" dur="3s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="95" cy="10" r="2" fill="#8b5cf6">
+            <animate attributeName="cy" values="30;10;30" dur="3.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0;0.8;0" dur="3.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="78" cy="8" r="1.8" fill="#06b6d4">
+            <animate attributeName="cy" values="20;8;20" dur="2.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0;0.9;0" dur="2.8s" repeatCount="indefinite"/>
+          </circle>
+          <!-- side connector panel -->
+          <rect x="155" y="100" width="16" height="50" rx="4" fill="#91DDFB20" stroke="#91DDFB40" stroke-width="1"/>
+          <rect x="158" y="108" width="10" height="6" rx="2" fill="#91DDFB60"/>
+          <rect x="158" y="120" width="10" height="6" rx="2" fill="#91DDFB60"/>
+          <rect x="158" y="132" width="10" height="6" rx="2" fill="#91DDFB60">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+          </rect>
+          <!-- bottom label bar -->
+          <rect x="60" y="168" width="80" height="14" rx="3" fill="#5727CC30" stroke="#5727CC40" stroke-width="1"/>
+          <text x="100" y="178.5" text-anchor="middle" fill="#a78bfa" font-size="7" font-weight="700" font-family="Inter,sans-serif" letter-spacing="1.5">SERVER NODE</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ About ═══ -->
+<section id="about" class="py-[72px]">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3 transition-colors duration-[350ms]" style="color:#8b5cf6;background:#8b5cf614">About</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em] transition-colors duration-[350ms]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">What is BYTEARENA?</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">A plug-and-play infrastructure for running competitive programming contests entirely offline. No cloud. No hosting. No internet. Just code.</p>
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5 mb-12">
+      <div class="text-center p-5 rounded-xl transition-all duration-300 hover:-translate-y-0.5" style="background:var(--stat-bg);border:1px solid var(--border)">
+        <div class="text-[1.7rem] font-extrabold bg-gradient-to-r from-zinc-100 to-[#a78bfa] bg-clip-text text-transparent">100+</div>
+        <div class="text-[.78rem] mt-0.5 transition-colors duration-[350ms]" style="color:var(--text-secondary)">Participants</div>
+      </div>
+      <div class="text-center p-5 rounded-xl transition-all duration-300 hover:-translate-y-0.5" style="background:var(--stat-bg);border:1px solid var(--border)">
+        <div class="text-[1.7rem] font-extrabold bg-gradient-to-r from-zinc-100 to-[#a78bfa] bg-clip-text text-transparent">2–5</div>
+        <div class="text-[.78rem] mt-0.5 transition-colors duration-[350ms]" style="color:var(--text-secondary)">Hour Contests</div>
+      </div>
+      <div class="text-center p-5 rounded-xl transition-all duration-300 hover:-translate-y-0.5" style="background:var(--stat-bg);border:1px solid var(--border)">
+        <div class="text-[1.7rem] font-extrabold bg-gradient-to-r from-zinc-100 to-[#a78bfa] bg-clip-text text-transparent">5K</div>
+        <div class="text-[.78rem] mt-0.5 transition-colors duration-[350ms]" style="color:var(--text-secondary)">Submissions</div>
+      </div>
+      <div class="text-center p-5 rounded-xl transition-all duration-300 hover:-translate-y-0.5" style="background:var(--stat-bg);border:1px solid var(--border)">
+        <div class="text-[1.7rem] font-extrabold bg-gradient-to-r from-zinc-100 to-[#a78bfa] bg-clip-text text-transparent">8</div>
+        <div class="text-[.78rem] mt-0.5 transition-colors duration-[350ms]" style="color:var(--text-secondary)">Judge Workers</div>
+      </div>
+      <div class="text-center p-5 rounded-xl transition-all duration-300 hover:-translate-y-0.5" style="background:var(--stat-bg);border:1px solid var(--border)">
+        <div class="text-[1.7rem] font-extrabold bg-gradient-to-r from-zinc-100 to-[#a78bfa] bg-clip-text text-transparent">&lt;2s</div>
+        <div class="text-[.78rem] mt-0.5 transition-colors duration-[350ms]" style="color:var(--text-secondary)">Leaderboard Delay</div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-[18px]">
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border);--hover-bg:var(--bg-elevated-hover);--hover-border:var(--border-hover)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#8b5cf618;color:#a78bfa">💻</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Organizer Laptop</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Runs the entire backend — contest server, judge worker, dashboard, and database. One machine does it all.</p>
+      </div>
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#06b6d418;color:#67e8f9">📡</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Wi-Fi Router</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Creates the isolated LAN. Organizer connects via Ethernet for reliability; participants join over Wi-Fi.</p>
+      </div>
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#10b98118;color:#6ee7b7">👨‍💻</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Participant Laptops</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Zero installation. Just a browser — Chrome or Firefox — pointed at the contest server's IP.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Why LAN ═══ -->
+<section class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Why Offline</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">Why LAN Instead of Cloud?</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">Traditional platforms depend on internet connectivity — which introduces cheating vectors, reliability issues, and ongoing costs.</p>
+
+    <div class="rounded-[18px] p-7 transition-all duration-350 hover:-translate-y-0.5" style="background:var(--bg-glass);border:1px solid var(--bg-glass-border);box-shadow:var(--shadow-card)">
+      <div class="grid md:grid-cols-2 gap-5">
+        <div>
+          <h3 class="text-base font-bold mb-3 text-[#fca5a5]">❌ Cloud Problems</h3>
+          <ul class="list-none">
+            <li class="py-1.5 text-[.85rem] border-b" style="color:var(--text-secondary);border-color:var(--border)">🔍 Participants can search Google</li>
+            <li class="py-1.5 text-[.85rem] border-b" style="color:var(--text-secondary);border-color:var(--border)">🤖 Participants can use ChatGPT</li>
+            <li class="py-1.5 text-[.85rem] border-b" style="color:var(--text-secondary);border-color:var(--border)">🌐 Internet reliability is a dependency</li>
+            <li class="py-1.5 text-[.85rem]" style="color:var(--text-secondary)">💰 Hosting costs keep adding up</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-base font-bold mb-3 text-[#6ee7b7]">✅ BYTEARENA Solution</h3>
+          <ul class="list-none">
+            <li class="py-1.5 text-[.85rem] border-b" style="color:var(--text-secondary);border-color:var(--border)">🔒 Contest exists only on LAN</li>
+            <li class="py-1.5 text-[.85rem] border-b" style="color:var(--text-secondary);border-color:var(--border)">⚡ Disconnect Wi-Fi → contest disappears</li>
+            <li class="py-1.5 text-[.85rem] border-b" style="color:var(--text-secondary);border-color:var(--border)">📦 Zero hosting infrastructure</li>
+            <li class="py-1.5 text-[.85rem]" style="color:var(--text-secondary)">🆓 Completely free to run</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Architecture ═══ -->
+<section id="architecture" class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Architecture</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">How It Works</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">A clean client-server architecture with a decoupled judge worker for scalable, isolated code verification.</p>
+
+    <div class="rounded-[14px] p-8 text-center overflow-x-auto mb-8 transition-colors duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border)">
+      <svg viewBox="0 0 660 200" style="max-width:660px;width:100%;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#5727CC"/></linearGradient></defs>
+        <rect x="270" y="10" width="120" height="46" rx="10" fill="#8b5cf618" stroke="#8b5cf635" stroke-width="1.5"/>
+        <text x="330" y="31" text-anchor="middle" fill="#c084fc" font-size="12" font-weight="600" font-family="Inter,sans-serif">🌐 Browser</text>
+        <text x="330" y="47" text-anchor="middle" fill="#52525b" font-size="8" font-family="Inter,sans-serif">Participants</text>
+        <line x1="330" y1="56" x2="330" y2="82" stroke="#ffffff10" stroke-width="1.5"/>
+        <line x1="330" y1="82" x2="170" y2="116" stroke="#8b5cf635" stroke-width="1.5"/>
+        <line x1="330" y1="82" x2="490" y2="116" stroke="#06b6d435" stroke-width="1.5"/>
+        <line x1="330" y1="82" x2="330" y2="116" stroke="#f59e0b35" stroke-width="1.5"/>
+        <rect x="90" y="112" width="160" height="46" rx="10" fill="#10b98118" stroke="#10b98135" stroke-width="1.5"/>
+        <text x="170" y="135" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="600" font-family="Inter,sans-serif">🖥️ Contest Server</text>
+        <text x="170" y="151" text-anchor="middle" fill="#52525b" font-size="8" font-family="Inter,sans-serif">Auth · Timer · API · WS</text>
+        <rect x="410" y="112" width="160" height="46" rx="10" fill="#06b6d418" stroke="#06b6d435" stroke-width="1.5"/>
+        <text x="490" y="132" text-anchor="middle" fill="#67e8f9" font-size="11" font-weight="600" font-family="Inter,sans-serif">⚖️ Judge Worker</text>
+        <text x="490" y="150" text-anchor="middle" fill="#52525b" font-size="8" font-family="Inter,sans-serif">Compile · Test · Verify</text>
+        <rect x="270" y="112" width="120" height="46" rx="10" fill="#f59e0b18" stroke="#f59e0b35" stroke-width="1.5"/>
+        <text x="330" y="132" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600" font-family="Inter,sans-serif">🗄️ Database</text>
+        <text x="330" y="150" text-anchor="middle" fill="#52525b" font-size="8" font-family="Inter,sans-serif">SQLite / PostgreSQL</text>
+        <line x1="170" y1="158" x2="330" y2="158" stroke="#ffffff08" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="330" y1="158" x2="490" y2="158" stroke="#ffffff08" stroke-width="1" stroke-dasharray="4,3"/>
+      </svg>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-[18px]">
+      <div class="rounded-[18px] p-7 transition-all duration-350 hover:-translate-y-1" style="background:var(--bg-glass);border:1px solid var(--bg-glass-border);box-shadow:var(--shadow-card);--hover-shadow:var(--shadow-card-hover);--hover-border:var(--border-active)">
+        <h3 class="text-[.95rem] font-bold mb-2.5 transition-colors duration-[350ms]" style="color:var(--text)">🖥️ Contest Server</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Handles authentication, contest timer, problem distribution, submission intake, leaderboard generation, organizer dashboard, and WebSocket push for live updates.</p>
+      </div>
+      <div class="rounded-[18px] p-7 transition-all duration-350 hover:-translate-y-1" style="background:var(--bg-glass);border:1px solid var(--bg-glass-border);box-shadow:var(--shadow-card)">
+        <h3 class="text-[.95rem] font-bold mb-2.5 transition-colors duration-[350ms]" style="color:var(--text)">⚖️ Judge Worker</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">An independent service that picks submissions from a queue, compiles the code, runs hidden testcases, compares output, and returns a verdict — scalable to multiple workers.</p>
+      </div>
+      <div class="rounded-[18px] p-7 transition-all duration-350 hover:-translate-y-1" style="background:var(--bg-glass);border:1px solid var(--bg-glass-border);box-shadow:var(--shadow-card)">
+        <h3 class="text-[.95rem] font-bold mb-2.5 transition-colors duration-[350ms]" style="color:var(--text)">📤 Submission Pipeline</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Submit → Queue → Judge → Compile → Run tests → Compare → Verdict → Leaderboard update. End-to-end in under 2 seconds with 4–8 workers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Network ═══ -->
+<section class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Network</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">Network Topology</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">Simple, reliable, and fully isolated — just a router, an organizer machine, and participant laptops.</p>
+
+    <div class="rounded-[14px] p-8 text-center overflow-x-auto transition-colors duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border)">
+      <svg viewBox="0 0 580 180" style="max-width:580px;width:100%;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+        <rect x="230" y="10" width="120" height="50" rx="10" fill="#8b5cf618" stroke="#8b5cf635" stroke-width="1.5"/>
+        <text x="290" y="32" text-anchor="middle" fill="#c084fc" font-size="12" font-weight="600" font-family="Inter,sans-serif">📡 LAN Router</text>
+        <text x="290" y="50" text-anchor="middle" fill="#52525b" font-size="8" font-family="Inter,sans-serif">No Internet WAN</text>
+        <line x1="290" y1="60" x2="290" y2="86" stroke="#ffffff10" stroke-width="1.5"/>
+        <line x1="290" y1="86" x2="110" y2="126" stroke="#8b5cf640" stroke-width="2" stroke-dasharray="6,4"/>
+        <line x1="290" y1="86" x2="470" y2="126" stroke="#06b6d440" stroke-width="2" stroke-dasharray="3,5"/>
+        <rect x="20" y="122" width="180" height="52" rx="10" fill="#10b98118" stroke="#10b98135" stroke-width="1.5"/>
+        <text x="110" y="146" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="600" font-family="Inter,sans-serif">🖥️ Organizer Laptop</text>
+        <text x="110" y="164" text-anchor="middle" fill="#52525b" font-size="8" font-family="Inter,sans-serif">RJ45 · contest.local</text>
+        <rect x="390" y="122" width="160" height="52" rx="10" fill="#06b6d418" stroke="#06b6d435" stroke-width="1.5"/>
+        <text x="470" y="146" text-anchor="middle" fill="#67e8f9" font-size="11" font-weight="600" font-family="Inter,sans-serif">👥 Participants</text>
+        <text x="470" y="164" text-anchor="middle" fill="#52525b" font-size="8" font-family="Inter,sans-serif">Wi-Fi · Browser</text>
+      </svg>
+      <p class="text-[.78rem] mt-3.5 transition-colors duration-[350ms]" style="color:var(--text-muted)">Organizer on Ethernet (RJ45) · Participants on Wi-Fi · No internet access</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Workflow ═══ -->
+<section class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Workflow</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">Contest Lifecycle</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">From setup to final results — every stage is designed for a smooth, fair contest experience.</p>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+      <div class="text-center p-5 rounded-[14px] transition-all duration-300 hover:bg-white/10" style="background:var(--bg-elevated);border:1px solid var(--border);--hover-bg:var(--bg-elevated-hover)">
+        <div class="w-8 h-8 rounded-full inline-flex items-center justify-center font-bold text-[.75rem] bg-[#5727CC] text-white mb-2.5">01</div>
+        <h4 class="text-[.85rem] font-semibold mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Create Contest</h4>
+        <p class="text-[.75rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Set name, duration, and problem set</p>
+      </div>
+      <div class="text-center p-5 rounded-[14px] transition-all duration-300 hover:bg-white/10" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-8 h-8 rounded-full inline-flex items-center justify-center font-bold text-[.75rem] bg-[#5727CC] text-white mb-2.5">02</div>
+        <h4 class="text-[.85rem] font-semibold mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Upload Problems</h4>
+        <p class="text-[.75rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Add statements, testcases, config</p>
+      </div>
+      <div class="text-center p-5 rounded-[14px] transition-all duration-300 hover:bg-white/10" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-8 h-8 rounded-full inline-flex items-center justify-center font-bold text-[.75rem] bg-[#5727CC] text-white mb-2.5">03</div>
+        <h4 class="text-[.85rem] font-semibold mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Start Server</h4>
+        <p class="text-[.75rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Launch on organizer machine</p>
+      </div>
+      <div class="text-center p-5 rounded-[14px] transition-all duration-300 hover:bg-white/10" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-8 h-8 rounded-full inline-flex items-center justify-center font-bold text-[.75rem] bg-[#5727CC] text-white mb-2.5">04</div>
+        <h4 class="text-[.85rem] font-semibold mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Join Wi-Fi</h4>
+        <p class="text-[.75rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Connect to LAN router</p>
+      </div>
+      <div class="text-center p-5 rounded-[14px] transition-all duration-300 hover:bg-white/10" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-8 h-8 rounded-full inline-flex items-center justify-center font-bold text-[.75rem] bg-[#5727CC] text-white mb-2.5">05</div>
+        <h4 class="text-[.85rem] font-semibold mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Login &amp; Compete</h4>
+        <p class="text-[.75rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Solve problems, submit code</p>
+      </div>
+      <div class="text-center p-5 rounded-[14px] transition-all duration-300 hover:bg-white/10" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-8 h-8 rounded-full inline-flex items-center justify-center font-bold text-[.75rem] bg-[#5727CC] text-white mb-2.5">06</div>
+        <h4 class="text-[.85rem] font-semibold mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Auto Judge</h4>
+        <p class="text-[.75rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Compile, test, generate verdict</p>
+      </div>
+      <div class="text-center p-5 rounded-[14px] transition-all duration-300 hover:bg-white/10" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-8 h-8 rounded-full inline-flex items-center justify-center font-bold text-[.75rem] bg-[#5727CC] text-white mb-2.5">07</div>
+        <h4 class="text-[.85rem] font-semibold mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Live Leaderboard</h4>
+        <p class="text-[.75rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Real-time rank updates</p>
+      </div>
+      <div class="text-center p-5 rounded-[14px] transition-all duration-300 hover:bg-white/10" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-8 h-8 rounded-full inline-flex items-center justify-center font-bold text-[.75rem] bg-[#5727CC] text-white mb-2.5">08</div>
+        <h4 class="text-[.85rem] font-semibold mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Review &amp; Publish</h4>
+        <p class="text-[.75rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Manual review, final results</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Features ═══ -->
+<section id="features" class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Features</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">Everything You Need</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">BYTEARENA packages an entire contest infrastructure into a single deployable system.</p>
+
+    <div class="grid md:grid-cols-3 gap-[18px]">
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#8b5cf618;color:#a78bfa">⏱️</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Scoring System</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Every submission timestamped. Leaderboard ranks by problems solved and first-accepted time.</p>
+      </div>
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#10b98118;color:#6ee7b7">🏆</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Live Leaderboard</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">WebSocket-driven real-time updates. Participants see rank changes instantly as the judge returns verdicts.</p>
+      </div>
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#f59e0b18;color:#fbbf24">🔍</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Manual Review</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Organizer can review every submission — source code, execution stats, timeline — then approve, reject, or flag.</p>
+      </div>
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#06b6d418;color:#67e8f9">🖥️</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Organizer Dashboard</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Live view of timer, participants, submissions, judge queue, server health, and warnings.</p>
+      </div>
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#ec489918;color:#f9a8d4">📊</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Connection Monitoring</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Heartbeat system and browser event logging. Know instantly who disconnects, switches tabs, or exits fullscreen.</p>
+      </div>
+      <div class="rounded-[14px] p-6 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[2.5px] before:bg-gradient-to-r before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <div class="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.2rem] mb-3" style="background:#ef444418;color:#fca5a5">🛡️</div>
+        <h3 class="text-base font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">Anti-Cheating</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Four layers of protection: LAN isolation, heartbeat, browser event logging, and internet detection.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Scoring + Leaderboard ═══ -->
+<section class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Evaluation</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">Two-Phase Evaluation</h2>
+    <p class="max-w-[650px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">Correctness is checked in real-time, but the ultimate leaderboard is decided after manual review <strong style="color:var(--text)">and</strong> a post-contest time complexity analysis.</p>
+
+    <!-- Phase 1 -->
+    <div class="rounded-[18px] p-7 mb-5 transition-all duration-350" style="background:var(--bg-glass);border:1px solid var(--bg-glass-border);box-shadow:var(--shadow-card)">
+      <div class="flex items-start gap-4 flex-wrap">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0" style="background:linear-gradient(135deg,#8b5cf6,#5727CC);color:#fff">1</div>
+        <div class="flex-1 min-w-[240px]">
+          <h3 class="text-base font-bold mb-1.5 transition-colors duration-[350ms]" style="color:var(--text)">⚡ Live Leaderboard <span style="font-size:.7rem;font-weight:600;color:var(--text-muted)">(Provisional)</span></h3>
+          <p class="text-[.82rem] leading-relaxed mb-4 transition-colors duration-[350ms]" style="color:var(--text-secondary)">During the contest, every accepted submission updates a live leaderboard via WebSockets. This uses only correctness (AC/WA) and time-to-solve — keeping the server responsive with zero overhead.</p>
+          <div class="overflow-x-auto rounded-[14px]" style="border:1px solid var(--border)">
+            <table class="w-full border-collapse text-[.85rem]">
+              <thead><tr style="background:var(--bg-elevated)"><th class="p-3 text-left font-semibold text-[.75rem] uppercase tracking-wider" style="color:var(--text-secondary);border-bottom:1px solid var(--border)">Rank</th><th class="p-3 text-left font-semibold text-[.75rem] uppercase tracking-wider" style="color:var(--text-secondary);border-bottom:1px solid var(--border)">Name</th><th class="p-3 text-left font-semibold text-[.75rem] uppercase tracking-wider" style="color:var(--text-secondary);border-bottom:1px solid var(--border)">Solved</th><th class="p-3 text-left font-semibold text-[.75rem] uppercase tracking-wider" style="color:var(--text-secondary);border-bottom:1px solid var(--border)">Time</th></tr></thead>
+              <tbody>
+                <tr><td class="p-3 border-b font-bold" style="color:var(--leader-gold);border-color:var(--border)">🥇 1</td><td class="p-3 border-b" style="color:var(--text);border-color:var(--border)">Alice</td><td class="p-3 border-b" style="border-color:var(--border)">4</td><td class="p-3 border-b" style="border-color:var(--border)">98</td></tr>
+                <tr><td class="p-3 border-b font-bold" style="color:var(--leader-silver);border-color:var(--border)">🥈 2</td><td class="p-3 border-b" style="color:var(--text);border-color:var(--border)">Bob</td><td class="p-3 border-b" style="border-color:var(--border)">4</td><td class="p-3 border-b" style="border-color:var(--border)">115</td></tr>
+                <tr><td class="p-3 border-b font-bold" style="color:var(--leader-bronze);border-color:var(--border)">🥉 3</td><td class="p-3 border-b" style="color:var(--text);border-color:var(--border)">Charlie</td><td class="p-3 border-b" style="border-color:var(--border)">3</td><td class="p-3 border-b" style="border-color:var(--border)">80</td></tr>
+                <tr><td class="p-3 border-b font-bold" style="color:var(--text);border-color:var(--border);border-bottom:none">4</td><td class="p-3 border-b" style="color:var(--text);border-color:var(--border);border-bottom:none">Diana</td><td class="p-3 border-b" style="border-color:var(--border);border-bottom:none">2</td><td class="p-3 border-b" style="border-color:var(--border);border-bottom:none">45</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="rounded-[18px] p-7 transition-all duration-350" style="background:var(--bg-glass);border:1px solid var(--bg-glass-border);box-shadow:var(--shadow-card)">
+      <div class="flex items-start gap-4 flex-wrap">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0" style="background:linear-gradient(135deg,#5727CC,#91DDFB);color:#fff">2</div>
+        <div class="flex-1 min-w-[240px]">
+          <h3 class="text-base font-bold mb-1.5 transition-colors duration-[350ms]" style="color:var(--text)">🧠 Post-Contest Analysis <span style="font-size:.7rem;font-weight:600;color:var(--text-muted)">(Ultimate Leaderboard)</span></h3>
+          <p class="text-[.82rem] leading-relaxed mb-4 transition-colors duration-[350ms]" style="color:var(--text-secondary)">After the contest ends and manual review is complete, the system analyzes every accepted solution's time complexity in a single batch. This avoids any CPU pressure on the laptop server during the contest. The <strong style="color:var(--text)">final leaderboard</strong> factors in:</p>
+          <div class="grid md:grid-cols-3 gap-3 mb-4">
+            <div class="p-4 rounded-xl" style="background:var(--bg-elevated);border:1px solid var(--border)">
+              <div class="text-lg mb-1">⏱️</div>
+              <h4 class="font-semibold text-sm mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Solve Time</h4>
+              <p class="text-[.72rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Minutes from contest start to first accepted submission.</p>
+            </div>
+            <div class="p-4 rounded-xl" style="background:var(--bg-elevated);border:1px solid var(--border)">
+              <div class="text-lg mb-1">⚡</div>
+              <h4 class="font-semibold text-sm mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Time Complexity</h4>
+              <p class="text-[.72rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Analyzed post-contest from the submitted source code — rewards efficient algorithms.</p>
+            </div>
+            <div class="p-4 rounded-xl" style="background:var(--bg-elevated);border:1px solid var(--border)">
+              <div class="text-lg mb-1">🛡️</div>
+              <h4 class="font-semibold text-sm mb-0.5 transition-colors duration-[350ms]" style="color:var(--text)">Manual Review</h4>
+              <p class="text-[.72rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Organizer approval flags hardcoded solutions, rule violations, and suspicious patterns.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl text-[.8rem]" style="background:var(--bg-elevated-hover);border:1px solid var(--border)">
+            <span class="shrink-0 text-lg">🔬</span>
+            <span style="color:var(--text-secondary)">Time complexity analysis runs <strong style="color:var(--text)">once after the contest</strong> as a batch job across all accepted submissions — zero impact on judge responsiveness during the competition.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Dashboard Preview ═══ -->
+<section class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Dashboard</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">Organizer Dashboard</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">Real-time visibility into every aspect of the contest — participants, submissions, verdicts, and system health.</p>
+
+    <div class="grid md:grid-cols-[2fr_1fr] gap-3.5">
+      <div class="flex flex-col gap-2.5">
+        <div class="rounded-[10px] px-4 py-3.5 flex items-center justify-between text-[.82rem] transition-colors duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border)"><span style="color:var(--text-secondary)">⏱️ Contest Timer</span><span class="font-semibold" style="color:var(--text)">02:34:15</span></div>
+        <div class="rounded-[10px] px-4 py-3.5 flex items-center justify-between text-[.82rem] transition-colors duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border)"><span style="color:var(--text-secondary)">👥 Participants Online</span><span class="font-semibold" style="color:var(--text)">28 / 32</span></div>
+        <div class="rounded-[10px] px-4 py-3.5 flex items-center justify-between text-[.82rem] transition-colors duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border)"><span style="color:var(--text-secondary)">📤 Recent Submissions</span><span class="font-semibold" style="color:var(--text)">147 total · 12 pending</span></div>
+        <div class="rounded-[10px] px-4 py-3.5 flex items-center justify-between text-[.82rem] transition-colors duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border)"><span style="color:var(--text-secondary)">⚖️ Judge Queue</span><span class="flex items-center gap-1.5 font-semibold" style="color:var(--text)"><span class="w-[7px] h-[7px] rounded-full" style="background:#10b981;box-shadow:0 0 6px rgba(16,185,129,.5)"></span> 4 workers · 3 queued</span></div>
+        <div class="rounded-[10px] px-4 py-3.5 flex items-center justify-between text-[.82rem] transition-colors duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border)"><span style="color:var(--text-secondary)">🖥️ Server Health</span><span class="flex items-center gap-1.5 font-semibold" style="color:var(--text)"><span class="w-[7px] h-[7px] rounded-full" style="background:#10b981;box-shadow:0 0 6px rgba(16,185,129,.5)"></span> CPU 23% · RAM 1.8 GB</span></div>
+      </div>
+      <div class="rounded-[10px] p-3.5 transition-colors duration-[350ms]" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <h4 class="text-[.76rem] font-semibold mb-2.5 tracking-wider transition-colors duration-[350ms]" style="color:var(--text-secondary)">PARTICIPANT STATUS</h4>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between text-[.78rem]"><span class="flex items-center gap-1.5"><span class="w-[7px] h-[7px] rounded-full" style="background:#10b981;box-shadow:0 0 6px rgba(16,185,129,.5)"></span> <span style="color:var(--text)">Alice</span></span><span style="color:var(--text-muted);font-size:.68rem">8 subs · 0 warns</span></div>
+          <div class="flex items-center justify-between text-[.78rem]"><span class="flex items-center gap-1.5"><span class="w-[7px] h-[7px] rounded-full" style="background:#10b981;box-shadow:0 0 6px rgba(16,185,129,.5)"></span> <span style="color:var(--text)">Bob</span></span><span style="color:var(--text-muted);font-size:.68rem">5 subs · 0 warns</span></div>
+          <div class="flex items-center justify-between text-[.78rem]"><span class="flex items-center gap-1.5"><span class="w-[7px] h-[7px] rounded-full" style="background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.5)"></span> <span style="color:var(--text)">Charlie</span></span><span style="color:var(--text-muted);font-size:.68rem">12 subs · 2 warns</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Security ═══ -->
+<section id="security" class="py-[72px]">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Security</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">Anti-Cheating Strategy</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">Rather than relying on impossible browser restrictions, BYTEARENA combines multiple practical layers that together create a fair contest environment.</p>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div class="p-5 rounded-[14px] transition-all duration-300 hover:-translate-y-0.5" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <span class="inline-block text-[.6rem] font-bold tracking-[1px] uppercase px-2.5 py-0.5 rounded-full mb-2.5" style="background:#8b5cf618;color:#a78bfa">Layer 1</span>
+        <h4 class="text-[.9rem] font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">📡 LAN Isolation</h4>
+        <p class="text-[.78rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Contest exists only inside the local network. Disconnect from Wi-Fi and the entire contest disappears.</p>
+      </div>
+      <div class="p-5 rounded-[14px] transition-all duration-300 hover:-translate-y-0.5" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <span class="inline-block text-[.6rem] font-bold tracking-[1px] uppercase px-2.5 py-0.5 rounded-full mb-2.5" style="background:#06b6d418;color:#67e8f9">Layer 2</span>
+        <h4 class="text-[.9rem] font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">💓 Heartbeat</h4>
+        <p class="text-[.78rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Browser sends <code class="text-[.7rem] px-1 py-0.5 rounded font-mono" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">POST /heartbeat</code> every few seconds.</p>
+      </div>
+      <div class="p-5 rounded-[14px] transition-all duration-300 hover:-translate-y-0.5" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <span class="inline-block text-[.6rem] font-bold tracking-[1px] uppercase px-2.5 py-0.5 rounded-full mb-2.5" style="background:#f59e0b18;color:#fbbf24">Layer 3</span>
+        <h4 class="text-[.9rem] font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">📋 Browser Events</h4>
+        <p class="text-[.78rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Tab switches, window blurs, and fullscreen exits logged live on the organizer dashboard.</p>
+      </div>
+      <div class="p-5 rounded-[14px] transition-all duration-300 hover:-translate-y-0.5" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <span class="inline-block text-[.6rem] font-bold tracking-[1px] uppercase px-2.5 py-0.5 rounded-full mb-2.5" style="background:#10b98118;color:#6ee7b7">Layer 4</span>
+        <h4 class="text-[.9rem] font-bold mb-1 transition-colors duration-[350ms]" style="color:var(--text)">🌐 Internet Detection</h4>
+        <p class="text-[.78rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Browser periodically probes a public endpoint. If reachable, a warning is flagged on the dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Roadmap ═══ -->
+<section id="roadmap" class="py-[72px]">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">Roadmap</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">Development Plan</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">Three phases from core MVP to a fully-featured offline contest infrastructure.</p>
+
+    <div class="relative pl-9 before:content-[''] before:absolute before:left-[14px] before:top-0 before:bottom-0 before:w-[2px] before:bg-gradient-to-b before:from-[#8b5cf6] before:via-[#5727CC] before:to-[#91DDFB]">
+      <div class="relative mb-9 p-5 rounded-[14px] transition-all duration-300 hover:translate-x-1 before:content-[''] before:absolute before:-left-[30px] before:top-6 before:w-[10px] before:h-[10px] before:rounded-full before:bg-[#8b5cf6] before:border-[3px] before:shadow-[0_0_0_2px_#8b5cf6]" style="background:var(--bg-elevated);border:1px solid var(--border);--hover-border:var(--border-hover);border-color:var(--border)">
+        <div class="text-[.65rem] font-bold tracking-[1.5px] uppercase text-[#a78bfa] mb-[5px]">Phase 1 — MVP</div>
+        <h3 class="text-[1.05rem] font-bold mb-1.5 transition-colors duration-[350ms]" style="color:var(--text)">Core Platform</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Contest creation, LAN hosting, login, problem viewing, code submission, automatic judging, leaderboard, and manual review.</p>
+        <div class="flex flex-wrap gap-1.5 mt-2.5"><span class="text-[.65rem] px-2 py-0.5 rounded-full transition-colors duration-[350ms]" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Contest Creation</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">LAN Hosting</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Login</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Auto Judge</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Leaderboard</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Manual Review</span></div>
+      </div>
+      <div class="relative mb-9 p-5 rounded-[14px] transition-all duration-300 hover:translate-x-1 before:content-[''] before:absolute before:-left-[30px] before:top-6 before:w-[10px] before:h-[10px] before:rounded-full before:bg-[#5727CC] before:border-[3px] before:shadow-[0_0_0_2px_#5727CC]" style="background:var(--bg-elevated);border:1px solid var(--border);--hover-border:var(--border-hover)">
+        <div class="text-[.65rem] font-bold tracking-[1.5px] uppercase text-[#67e8f9] mb-[5px]">Phase 2 — Enhancement</div>
+        <h3 class="text-[1.05rem] font-bold mb-1.5 transition-colors duration-[350ms]" style="color:var(--text)">Quality of Life</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Captive portal, practice mode, clarification requests, contest templates, and mDNS auto-discovery.</p>
+        <div class="flex flex-wrap gap-1.5 mt-2.5"><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Captive Portal</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Practice Mode</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Clarifications</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Templates</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">mDNS Discovery</span></div>
+      </div>
+      <div class="relative p-5 rounded-[14px] transition-all duration-300 hover:translate-x-1 before:content-[''] before:absolute before:-left-[30px] before:top-6 before:w-[10px] before:h-[10px] before:rounded-full before:bg-[#91DDFB] before:border-[3px] before:shadow-[0_0_0_2px_#91DDFB]" style="background:var(--bg-elevated);border:1px solid var(--border);--hover-border:var(--border-hover)">
+        <div class="text-[.65rem] font-bold tracking-[1.5px] uppercase text-[#fbbf24] mb-[5px]">Phase 3 — Advanced</div>
+        <h3 class="text-[1.05rem] font-bold mb-1.5 transition-colors duration-[350ms]" style="color:var(--text)">Production Ready</h3>
+        <p class="text-[.82rem] leading-relaxed transition-colors duration-[350ms]" style="color:var(--text-secondary)">Docker sandboxing, multi-worker judge pool, plagiarism detection, ICPC penalties, contest import/export, and analytics dashboard.</p>
+        <div class="flex flex-wrap gap-1.5 mt-2.5"><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Docker Sandbox</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Plagiarism Detection</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">ICPC Penalties</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Analytics</span><span class="text-[.65rem] px-2 py-0.5 rounded-full" style="background:var(--bg-elevated-hover);color:var(--text-secondary);border:1px solid var(--border)">Import/Export</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MVP ═══ -->
+<section id="mvp" class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <span class="inline-block text-[.7rem] font-semibold tracking-[2px] uppercase rounded-full px-3.5 py-1 mb-3" style="color:#8b5cf6;background:#8b5cf614">MVP</span>
+    <h2 class="font-extrabold mb-3 tracking-[-.02em]" style="background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:clamp(1.6rem,3.5vw,2.5rem)">MVP Deliverables</h2>
+    <p class="max-w-[600px] mb-9 text-base transition-colors duration-[350ms]" style="color:var(--text-secondary)">The minimum viable product covers the complete organizer and participant experience from end to end.</p>
+
+    <div class="grid md:grid-cols-3 gap-[18px]">
+      <div class="p-[26px] rounded-[14px] transition-all duration-300 hover:-translate-y-0.5" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <h3 class="text-[.95rem] font-bold mb-2.5 flex items-center gap-2 transition-colors duration-[350ms]" style="color:var(--text)">🛠️ Organizer</h3>
+        <ul class="list-none"><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Create Contest</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Upload Problems</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Start Contest</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Review Submissions</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Publish Results</li></ul>
+      </div>
+      <div class="p-[26px] rounded-[14px] transition-all duration-300 hover:-translate-y-0.5" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <h3 class="text-[.95rem] font-bold mb-2.5 flex items-center gap-2 transition-colors duration-[350ms]" style="color:var(--text)">👨‍💻 Participant</h3>
+        <ul class="list-none"><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Join LAN</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Login</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Read Problems</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Submit Code</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">View Verdict</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">View Leaderboard</li></ul>
+      </div>
+      <div class="p-[26px] rounded-[14px] transition-all duration-300 hover:-translate-y-0.5" style="background:var(--bg-elevated);border:1px solid var(--border)">
+        <h3 class="text-[.95rem] font-bold mb-2.5 flex items-center gap-2 transition-colors duration-[350ms]" style="color:var(--text)">⚙️ System</h3>
+        <ul class="list-none"><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Offline Hosting</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Auto Testcase Verification</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Timestamp Tracking</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Live Leaderboard</li><li class="text-[.82rem] py-1 pl-4 relative before:content-['▸'] before:absolute before:left-0 before:text-[#8b5cf6] transition-colors duration-[350ms]" style="color:var(--text-secondary)">Manual Review</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Tech Stack + Project Structure ═══ -->
+<section class="py-[72px] pt-0">
+  <div class="max-w-[1120px] mx-auto px-6 relative z-10">
+    <div class="grid md:grid-cols-2 gap-5">
+      <div class="rounded-[18px] p-7 transition-all duration-350 hover:-translate-y-0.5" style="background:var(--bg-glass);border:1px solid var(--bg-glass-border);box-shadow:var(--shadow-card)">
+        <h3 class="text-base font-bold mb-4 transition-colors duration-[350ms]" style="color:var(--text)">💻 Tech Stack</h3>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div><h4 class="text-[.78rem] font-semibold mb-2" style="color:#a78bfa">Backend</h4><div class="flex flex-wrap gap-1.5 text-[.74rem]"><span class="px-2.5 py-1 rounded-md transition-colors duration-[350ms]" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">FastAPI</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">SQLAlchemy</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">SQLite</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">PostgreSQL</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">WebSockets</span></div></div>
+          <div><h4 class="text-[.78rem] font-semibold mb-2" style="color:#67e8f9">Frontend</h4><div class="flex flex-wrap gap-1.5 text-[.74rem]"><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">React</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">TailwindCSS</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">Monaco Editor</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">React Query</span></div></div>
+          <div><h4 class="text-[.78rem] font-semibold mb-2" style="color:#fbbf24">Judge &amp; Networking</h4><div class="flex flex-wrap gap-1.5 text-[.74rem]"><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">Python</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">Queue System</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">Multi-Worker</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">Docker (P3)</span><span class="px-2.5 py-1 rounded-md" style="background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)">mDNS</span></div></div>
+        </div>
+      </div>
+      <div class="rounded-[18px] p-7 transition-all duration-350 hover:-translate-y-0.5" style="background:var(--bg-glass);border:1px solid var(--bg-glass-border);box-shadow:var(--shadow-card)">
+        <h3 class="text-base font-bold mb-4 transition-colors duration-[350ms]" style="color:var(--text)">📁 Project Layout</h3>
+        <div class="rounded-[10px] p-4 font-mono text-[.72rem] leading-loose max-w-[400px] transition-colors duration-[350ms]" style="background:var(--code-bg);border:1px solid var(--border);color:var(--text-secondary)">
+Contest/<br>
+├── <span style="color:#a78bfa">Problems/</span><br>
+│&nbsp;&nbsp;├── <span style="color:#67e8f9">A/</span><br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├── statement.md<br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;├── tests/<br>
+│&nbsp;&nbsp;│&nbsp;&nbsp;└── config.json<br>
+│&nbsp;&nbsp;├── <span style="color:#67e8f9">B/</span><br>
+│&nbsp;&nbsp;└── <span style="color:#67e8f9">C/</span><br>
+├── <span style="color:#a78bfa">Submissions/</span><br>
+│&nbsp;&nbsp;├── <span style="color:#67e8f9">Alice/</span><br>
+│&nbsp;&nbsp;└── <span style="color:#67e8f9">Bob/</span><br>
+├── <span style="color:#a78bfa">Database/</span><br>
+├── <span style="color:#a78bfa">Logs/</span><br>
+└── <span style="color:#a78bfa">Config/</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Footer ═══ -->
+<footer class="py-7 text-center transition-colors duration-[350ms]" style="border-top:1px solid var(--border)">
+  <div class="max-w-[1120px] mx-auto px-6">
+    <p class="mb-1 font-semibold transition-colors duration-[350ms]" style="color:var(--text-secondary)">BYTE<span class="bg-gradient-to-r from-[#8b5cf6] to-[#5727CC] bg-clip-text text-transparent">ARENA</span> <span style="color:var(--text-muted);font-weight:400">by BYTEMONK</span></p>
+    <p style="color:var(--text-muted);font-size:.82rem">No Cloud. No Internet. Just Code.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var html=document.documentElement;
+  var toggle=document.getElementById('themeToggle');
+  var stored=localStorage.getItem('bytearena-theme');
+  if(stored==='light')html.classList.add('light');
+  toggle.addEventListener('click',function(){
+    html.classList.toggle('light');
+    localStorage.setItem('bytearena-theme',html.classList.contains('light')?'light':'dark');
+  });
+})();
+var sec=document.querySelectorAll('section[id]'),lk=document.querySelectorAll('.nav-l a');
+window.addEventListener('scroll',function(){var c='';sec.forEach(function(s){if(window.scrollY>=s.offsetTop-120)c=s.getAttribute('id')});lk.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+c)})});
+var ob=new IntersectionObserver(function(e){e.forEach(function(e){if(e.isIntersecting)e.target.classList.add('vi')})},{threshold:.08});
+document.querySelectorAll('[style*="background:var(--bg-elevated)"]').forEach(function(el){el.classList.add('fi');ob.observe(el)});
+</script>
+</body>
+</html>
