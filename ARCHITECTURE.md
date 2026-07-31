@@ -89,11 +89,38 @@ LANGUAGES = {
 }
 ```
 
-**Phase 3 backend (container-level isolation):** swap the same `compile`/`run` interface to shell out to Docker (or a lighter runtime like gVisor/nsjail if container startup latency matters at scale) with equivalent resource limits enforced by the runtime instead of `rlimit`. Because callers only see `compile()`/`run()`, this is a backend swap, not an architectural change.
+**Phase 3 backend (container-level isolation):** swap the same `compile`/`run` interface to shell out to Docker (or a lighter runtime like gVisor/nsjail if container startup latency matters at scale) with equivalent resource limits enforced by the runtime instead of `rlimit`. Because callers only see `compile()`/`run()`, this is a backend swap, not an architectural change. Wasmer/WASI's capability-based sandboxing is another option for this swap — smaller footprint and faster cold start than a container runtime, same `compile()`/`run()` interface, no redesign. Not a decision, just a documented alternative alongside Docker/gVisor.
 
 **Queue & scaling:** judge workers pull jobs from the shared queue independently — scaling from 1 to N workers is just running more worker processes, no coordination logic needed beyond the queue itself (`SELECT ... FOR UPDATE SKIP LOCKED`-style claim, or a proper queue library once on Redis).
 
 **Verdict states:** `AC`, `WA`, `TLE`, `MLE`, `RE` (runtime error/non-zero exit), `CE` (compile error), plus an internal `JUDGE_ERROR` for infra failures (distinct from `RE` — a judge bug shouldn't look like the participant's fault).
+
+## 3a. Client-Side Sample Runner (Wasmer + Pyodide)
+
+Running participant code entirely client-side — in the browser, with the server only evaluating — was considered and rejected for the official verdict. It breaks the trust model the anti-cheat design depends on: a client-reported verdict can be spoofed (the participant controls their own browser and network calls), hidden testcases would have to be sent to the browser to execute there, making them visible in devtools and defeating "hidden" testcases entirely, and TLE becomes meaningless across heterogeneous participant hardware. This is the same rationale that forces server-side sandboxing in §3.
+
+Instead, a narrower, safe version: a **client-side sample runner**. It runs entirely in the participant's browser against only that problem's sample testcases (`testcases` rows where `is_sample=true` — the inputs already shown to the participant) and returns a "matches sample output" / "doesn't match" signal. It's a fast local feedback loop before the participant hits submit, and it cuts judge-queue load from iterative "does this even compile" submissions. It never produces an official verdict, never touches hidden testcases, and never touches the leaderboard. The official pipeline is unchanged: a full submission always goes to the sandboxed judge worker (§3), runs against hidden tests, and that verdict is the only one that counts.
+
+**Runtimes, per language** (both vendored into the frontend build — no CDN load at runtime, per the offline requirement):
+- **C/C++:** Wasmer JS SDK running the WASIX `clang/clang` package — clang itself runs inside WASM, so compile and run both happen client-side with no separate Emscripten toolchain step. Firefox and Safari are supported (the earlier WASI `posix_spawn` limitation is resolved in WASIX).
+- **Python:** Pyodide (CPython built for WASM), kept as a separate, more mature browser-Python path rather than routing Python through Wasmer — it's purpose-built for this and there's no benefit to consolidating onto one runtime.
+
+**Wall-clock substitute:** browsers can't enforce a real rlimit-style timeout, so the sample runner uses Wasmer's deterministic instruction-limiting feature — capping the number of instructions a program may execute — as a proxy for a time cap. This is explicitly a proxy, not a real time limit, and applies only to the sample runner; the judge worker's rlimit/process-group-kill timeout in §3 is unaffected.
+
+**Trust boundary:** the only thing that crosses from client to server for a real submission is `source_path` (the code itself). Nothing about the sample runner's local pass/fail result crosses back into the verdict pipeline.
+
+```mermaid
+flowchart LR
+    subgraph Participant["Participant Device (Untrusted)"]
+        SR["Wasmer/Pyodide Sample Runner — sample tests only, instant feedback"]
+    end
+
+    subgraph Judge["Judge Server (Trusted)"]
+        JW["Sandboxed Judge Worker — hidden tests, official verdict"]
+    end
+
+    SR -->|"Submits source code only"| JW
+```
 
 ## 4. Scoring Engine
 
@@ -204,7 +231,7 @@ All four feed the same `events` table, giving the organizer dashboard one unifie
 Resequenced from the original phase list to move safety- and day-of-experience-critical items earlier:
 
 1. **MVP** — contest CRUD, LAN hosting, login, problem viewing/submission, **OS-level sandboxed** judging (§3 MVP backend), live leaderboard with ICPC-style penalty scoring already built in, manual review, mDNS auto-discovery, submission rate limiting.
-2. **Phase 2 — Enhancement** — captive portal, practice mode, clarifications, contest templates, leaderboard freeze window.
+2. **Phase 2 — Enhancement** — captive portal, practice mode, clarifications, contest templates, leaderboard freeze window, client-side Wasmer/Pyodide sample runner.
 3. **Phase 3 — Advanced** — swap sandbox backend to Docker/gVisor (interface unchanged, §3), plagiarism detection bundled into the existing post-contest batch job (§4), contest import/export, analytics dashboard.
 
 The key structural decision that makes this sequence work: the judge worker's `compile()`/`run()` interface and the scoring engine's penalty/freeze logic are both designed once, correctly, in the MVP — later phases upgrade backends and add analysis passes without rearchitecting either.

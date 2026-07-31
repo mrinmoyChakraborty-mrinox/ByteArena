@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BYTEARENA — Organizer</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#050508;color:#e4e4e7;line-height:1.6;min-height:100vh}
+::selection{background:#8b5cf680;color:#fff}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#050508}
+::-webkit-scrollbar-thumb{background:#2a2a3e;border-radius:4px}
+a{color:#a78bfa;text-decoration:none}
+a:hover{color:#c084fc}
+.container{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* Nav */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(5,5,8,0.85);backdrop-filter:blur(24px);position:sticky;top:0;z-index:100}
+nav .logo{font-weight:800;font-size:1.05rem;letter-spacing:-0.02em}
+nav .logo span{background:linear-gradient(135deg,#8b5cf6,#5727CC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Cards */
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-bottom:16px;transition:all .2s}
+.card:hover{border-color:rgba(255,255,255,0.10)}
+.card h3{font-size:.95rem;font-weight:600;margin-bottom:8px}
+.card p{font-size:.82rem;color:#888;line-height:1.5}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(255,255,255,0.08);cursor:pointer;transition:all .2s;background:rgba(255,255,255,0.05);color:#e4e4e7}
+.btn:hover{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.14)}
+.btn-primary{background:#5727CC;border-color:#5727CC;color:#fff}
+.btn-primary:hover{background:#4B22B5;border-color:#4B22B5}
+.btn-danger{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.25);color:#fca5a5}
+.btn-danger:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.35)}
+.btn-sm{padding:5px 12px;font-size:.75rem}
+
+/* Form */
+input,textarea,select{width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e4e4e7;font-size:.85rem;font-family:inherit;outline:none;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:#8b5cf6}
+textarea{resize:vertical;min-height:80px}
+label{font-size:.8rem;font-weight:500;color:#888;display:block;margin-bottom:4px}
+.form-group{margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.05)}
+th{color:#888;font-weight:500;font-size:.75rem;text-transform:uppercase;letter-spacing:0.5px}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:600}
+.badge-scheduled{background:rgba(251,191,36,0.15);color:#fbbf24}
+.badge-running{background:rgba(16,185,129,0.15);color:#6ee7b7}
+.badge-ended{background:rgba(107,114,128,0.15);color:#9ca3af}
+.badge-paused{background:rgba(249,115,22,0.15);color:#fb923c}
+
+/* Page sections */
+.page{display:none;padding:32px 0}
+.page.active{display:block}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.section-header h2{font-size:1.3rem;font-weight:700;letter-spacing:-0.02em}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#0a0a12;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto}
+.modal h3{font-size:1.1rem;font-weight:700;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* Empty state */
+.empty-state{padding:40px;text-align:center;color:#52525b}
+.empty-state p{font-size:.9rem;margin-bottom:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:.85rem;z-index:300;opacity:0;transform:translateY(12px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.toast-success{background:#065f46;color:#6ee7b7;border:1px solid rgba(16,185,129,0.3)}
+.toast-error{background:#7f1d1d;color:#fca5a5;border:1px solid rgba(239,68,68,0.3)}
+
+/* Tab nav */
+.tab-nav{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:0}
+.tab-nav button{padding:10px 18px;border:none;background:none;color:#888;font-size:.85rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab-nav button:hover{color:#e4e4e7}
+.tab-nav button.active{color:#a78bfa;border-bottom-color:#8b5cf6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">BYTE<span>ARENA</span> <span style="font-weight:400;font-size:.7rem;color:#52525b;margin-left:4px">Organizer</span></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn btn-sm" onclick="showPage('contests')">Contests</button>
+    <button class="btn btn-sm" onclick="showPage('problems')">Problems</button>
+    <button class="btn btn-sm" onclick="showPage('testcases')">Testcases</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- ===== CONTESTS PAGE ===== -->
+  <div id="page-contests" class="page active">
+    <div class="section-header">
+      <h2>Contests</h2>
+      <button class="btn btn-primary" onclick="openModal('contest-modal')">+ New Contest</button>
+    </div>
+    <div id="contest-list"></div>
+  </div>
+
+  <!-- ===== PROBLEMS PAGE ===== -->
+  <div id="page-problems" class="page">
+    <div class="section-header">
+      <h2>Problems</h2>
+      <div style="display:flex;gap:8px">
+        <select id="problem-contest-select" onchange="loadProblems()" style="width:auto;min-width:180px">
+          <option value="">— Select contest —</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('problem-modal')" id="add-problem-btn" disabled>+ Add Problem</button>
+      </div>
+    </div>
+    <div id="problem-list"></div>
+  </div>
+
+  <!-- ===== TESTCASES PAGE ===== -->
+  <div id="page-testcases" class="page">
+    <div class="section-header">
+      <h2>Testcases</h2>
+      <div style="display:flex;gap:8px">
+        <select id="testcase-contest-select" onchange="loadTestcaseProblems()" style="width:auto;min-width:180px">
+          <option value="">— Select contest —</option>
+        </select>
+        <select id="testcase-problem-select" onchange="loadTestcases()" style="width:auto;min-width:180px" disabled>
+          <option value="">— Select problem —</option>
+        </select>
+      </div>
+    </div>
+    <div id="testcase-list"></div>
+  </div>
+
+</div>
+
+<!-- ===== CONTEST MODAL ===== -->
+<div class="modal-overlay" id="contest-modal">
+  <div class="modal">
+    <h3>New Contest</h3>
+    <div class="form-group">
+      <label>Name</label>
+      <input id="contest-name" placeholder="e.g. Intra College Coding Contest">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Start (optional)</label>
+        <input id="contest-start" type="datetime-local">
+      </div>
+      <div class="form-group">
+        <label>End (optional)</label>
+        <input id="contest-end" type="datetime-local">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Freeze (minutes)</label>
+        <input id="contest-freeze" type="number" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>Penalty (minutes)</label>
+        <input id="contest-penalty" type="number" value="20" min="0">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('contest-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createContest()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROBLEM MODAL ===== -->
+<div class="modal-overlay" id="problem-modal">
+  <div class="modal">
+    <h3>Add Problem</h3>
+    <div style="margin-bottom:16px;display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" onclick="showProblemTab('manual')" id="ptab-manual">Manual</button>
+      <button class="btn btn-sm" onclick="showProblemTab('load')" id="ptab-load">Load from Disk</button>
+    </div>
+
+    <div id="pform-manual">
+      <div class="form-group">
+        <label>Code</label>
+        <input id="problem-code" placeholder="e.g. A">
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input id="problem-title" placeholder="e.g. Two Sum">
+      </div>
+      <div class="form-group">
+        <label>Statement (Markdown)</label>
+        <textarea id="problem-statement" rows="6" placeholder="# Problem&#10;Describe the problem..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Time Limit (ms)</label>
+          <input id="problem-time" type="number" value="1000">
+        </div>
+        <div class="form-group">
+          <label>Memory Limit (MB)</label>
+          <input id="problem-mem" type="number" value="256">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Points</label>
+        <input id="problem-points" type="number" value="100">
+      </div>
+    </div>
+
+    <div id="pform-load" style="display:none">
+      <div class="form-group">
+        <label>Problem Code</label>
+        <input id="problem-load-code" placeholder="e.g. A (must match Contest/Problems/A/)">
+      </div>
+      <p style="font-size:.78rem;color:#888;margin-bottom:8px">Loads <code>statement.md</code>, <code>config.json</code>, and testcases from <code>Contest/Problems/&lt;code&gt;/</code></p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('problem-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addProblem()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+// --- State ---
+let contests = [];
+let selectedContestId = null;
+
+// --- Init ---
+document.addEventListener('DOMContentLoaded', () => {
+  loadContests();
+});
+
+// --- Navigation ---
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'contests') loadContests();
+  if (name === 'problems') loadProblemSelects();
+  if (name === 'testcases') loadTestcaseContestSelect();
+}
+
+// --- Toast ---
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast toast-' + type + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// --- Modal ---
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// --- API ---
+async function api(method, path, body) {
+  const opts = { method, headers: {} };
+  if (body) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(path, opts);
+  if (res.status === 204) return null;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Request failed');
+  return data;
+}
+
+// ==================== CONTESTS ====================
+async function loadContests() {
+  contests = await api('GET', '/api/contests');
+  renderContests();
+  loadProblemSelects();
+  loadTestcaseContestSelect();
+}
+
+function renderContests() {
+  const el = document.getElementById('contest-list');
+  if (!contests.length) {
+    el.innerHTML = '<div class="empty-state"><p>No contests yet</p><button class="btn btn-primary" onclick="openModal(\'contest-modal\')">Create your first contest</button></div>';
+    return;
+  }
+  el.innerHTML = '<table><thead><tr><th>Name</th><th>State</th><th>Problems</th><th>Start</th><th>End</th><th>Actions</th></tr></thead><tbody>' +
+    contests.map(c => {
+      const stateClass = 'badge-' + c.state;
+      return `<tr>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td><span class="badge ${stateClass}">${c.state}</span></td>
+        <td>${c.problem_count}</td>
+        <td>${c.start_at ? new Date(c.start_at).toLocaleString() : '—'}</td>
+        <td>${c.end_at ? new Date(c.end_at).toLocaleString() : '—'}</td>
+        <td>
+          <button class="btn btn-sm" onclick="selectContest(${c.id})">View</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteContest(${c.id})">Delete</button>
+        </td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+async function createContest() {
+  const name = document.getElementById('contest-name').value.trim();
+  if (!name) { toast('Name is required', 'error'); return; }
+  const start = document.getElementById('contest-start').value;
+  const end = document.getElementById('contest-end').value;
+  try {
+    await api('POST', '/api/contests', {
+      name,
+      start_at: start ? new Date(start).toISOString() : null,
+      end_at: end ? new Date(end).toISOString() : null,
+      freeze_minutes: parseInt(document.getElementById('contest-freeze').value) || 0,
+      penalty_minutes: parseInt(document.getElementById('contest-penalty').value) || 20,
+    });
+    toast('Contest created', 'success');
+    closeModal('contest-modal');
+    document.getElementById('contest-name').value = '';
+    loadContests();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteContest(id) {
+  if (!confirm('Delete this contest and all its problems?')) return;
+  try {
+    await api('DELETE', '/api/contests/' + id);
+    toast('Contest deleted', 'success');
+    loadContests();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function selectContest(id) {
+  selectedContestId = id;
+  showPage('problems');
+  document.getElementById('problem-contest-select').value = id;
+  loadProblems();
+}
+
+// ==================== PROBLEMS ====================
+async function loadProblemSelects() {
+  const sel = document.getElementById('problem-contest-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select contest —</option>';
+  for (const c of contests) {
+    sel.innerHTML += `<option value="${c.id}">${esc(c.name)}</option>`;
+  }
+  sel.value = cur;
+  document.getElementById('add-problem-btn').disabled = !sel.value;
+  if (sel.value) loadProblems();
+}
+
+async function loadProblems() {
+  const contestId = document.getElementById('problem-contest-select').value;
+  document.getElementById('add-problem-btn').disabled = !contestId;
+  if (!contestId) {
+    document.getElementById('problem-list').innerHTML = '<div class="empty-state"><p>Select a contest to view its problems</p></div>';
+    return;
+  }
+  const problems = await api('GET', `/api/contests/${contestId}/problems`);
+  const el = document.getElementById('problem-list');
+  if (!problems.length) {
+    el.innerHTML = '<div class="empty-state"><p>No problems in this contest</p></div>';
+    return;
+  }
+  el.innerHTML = '<table><thead><tr><th>Code</th><th>Title</th><th>Time</th><th>Memory</th><th>Points</th><th>Testcases</th><th>Actions</th></tr></thead><tbody>' +
+    problems.map(p => `<tr>
+      <td><strong>${esc(p.code)}</strong></td>
+      <td>${esc(p.title)}</td>
+      <td>${p.time_limit_ms}ms</td>
+      <td>${p.mem_limit_mb}MB</td>
+      <td>${p.points}</td>
+      <td>${p.testcase_count}</td>
+      <td>
+        <button class="btn btn-sm" onclick="viewProblem(${p.id})">View</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteProblem(${p.id})">Delete</button>
+      </td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+let problemTab = 'manual';
+function showProblemTab(tab) {
+  problemTab = tab;
+  document.getElementById('pform-manual').style.display = tab === 'manual' ? 'block' : 'none';
+  document.getElementById('pform-load').style.display = tab === 'load' ? 'block' : 'none';
+  document.querySelectorAll('#problem-modal .btn-sm').forEach(b => b.className = 'btn btn-sm');
+  document.getElementById('ptab-' + tab).className = 'btn btn-primary btn-sm';
+}
+
+async function addProblem() {
+  const contestId = document.getElementById('problem-contest-select').value;
+  if (!contestId) { toast('Select a contest first', 'error'); return; }
+  try {
+    if (problemTab === 'load') {
+      const code = document.getElementById('problem-load-code').value.trim();
+      if (!code) { toast('Enter problem code', 'error'); return; }
+      const result = await api('POST', `/api/contests/${contestId}/problems/load?code=${encodeURIComponent(code)}`);
+      toast(`Loaded "${result.title}" (${result.testcases_found} testcases)`, 'success');
+    } else {
+      const code = document.getElementById('problem-code').value.trim();
+      const title = document.getElementById('problem-title').value.trim();
+      const statement = document.getElementById('problem-statement').value.trim();
+      if (!code || !title || !statement) { toast('Code, title, and statement are required', 'error'); return; }
+      await api('POST', `/api/contests/${contestId}/problems`, {
+        code, title, statement_md: statement,
+        time_limit_ms: parseInt(document.getElementById('problem-time').value) || 1000,
+        mem_limit_mb: parseInt(document.getElementById('problem-mem').value) || 256,
+        points: parseInt(document.getElementById('problem-points').value) || 100,
+      });
+      toast('Problem created', 'success');
+    }
+    closeModal('problem-modal');
+    loadProblems();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteProblem(id) {
+  if (!confirm('Delete this problem and all its testcases?')) return;
+  try {
+    await api('DELETE', '/api/problems/' + id);
+    toast('Problem deleted', 'success');
+    loadProblems();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function viewProblem(id) {
+  const problem = await api('GET', '/api/problems/' + id);
+  const tcs = await api('GET', `/api/problems/${id}/testcases`);
+  alert(`PROBLEM: ${problem.code} - ${problem.title}\n\nTime: ${problem.time_limit_ms}ms | Memory: ${problem.mem_limit_mb}MB | Points: ${problem.points}\nTestcases: ${tcs.length}\n\nStatement preview:\n${problem.statement_md.substring(0, 500)}...`);
+}
+
+// ==================== TESTCASES ====================
+async function loadTestcaseContestSelect() {
+  const sel = document.getElementById('testcase-contest-select');
+  sel.innerHTML = '<option value="">— Select contest —</option>';
+  for (const c of contests) {
+    sel.innerHTML += `<option value="${c.id}">${esc(c.name)}</option>`;
+  }
+}
+
+async function loadTestcaseProblems() {
+  const contestId = document.getElementById('testcase-contest-select').value;
+  const sel = document.getElementById('testcase-problem-select');
+  sel.disabled = !contestId;
+  sel.innerHTML = '<option value="">— Select problem —</option>';
+  if (!contestId) return;
+  const problems = await api('GET', `/api/contests/${contestId}/problems`);
+  for (const p of problems) {
+    sel.innerHTML += `<option value="${p.id}">${esc(p.code)} - ${esc(p.title)}</option>`;
+  }
+  loadTestcases();
+}
+
+async function loadTestcases() {
+  const problemId = document.getElementById('testcase-problem-select').value;
+  const el = document.getElementById('testcase-list');
+  if (!problemId) {
+    el.innerHTML = '<div class="empty-state"><p>Select a contest and problem to view testcases</p></div>';
+    return;
+  }
+  const tcs = await api('GET', `/api/problems/${problemId}/testcases`);
+  if (!tcs.length) {
+    el.innerHTML = '<div class="empty-state"><p>No testcases for this problem. Load from disk or create manually.</p></div>';
+    return;
+  }
+  el.innerHTML = '<table><thead><tr><th>#</th><th>Input</th><th>Output</th><th>Sample</th><th>Points</th><th>Type</th></tr></thead><tbody>' +
+    tcs.map((tc, i) => `<tr>
+      <td>${i + 1}</td>
+      <td style="font-size:.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(tc.input_path)}</td>
+      <td style="font-size:.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(tc.output_path)}</td>
+      <td>${tc.is_sample ? 'Yes' : 'No'}</td>
+      <td>${tc.points}</td>
+      <td>${esc(tc.checker_type)}</td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+// --- Utils ---
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

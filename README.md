@@ -103,6 +103,7 @@ Organizer on Ethernet (RJ45) · Participants on Wi-Fi · No internet access. `co
 - **Connection Monitoring** — Heartbeat system and browser event logging. Know who disconnects, switches tabs, or exits fullscreen.
 - **Anti-Cheating** — Four layers: LAN isolation, heartbeat, browser event logging, and internet detection.
 - **Sandboxed Execution** — All submissions run under CPU, memory, and wall-clock limits, isolated from the host filesystem and network — from the MVP onward (see [Security](#security)).
+- **Client-Side Sample Runner** — C/C++ and Python run in-browser (Wasmer/Pyodide) against the sample testcases for instant pass/fail feedback before submitting; the official verdict still comes only from the server-side judge.
 
 ## Two-Phase Evaluation
 
@@ -182,6 +183,7 @@ flowchart LR
         TW[TailwindCSS]
         ME[Monaco Editor]
         RQ[React Query]
+        SR[Wasmer/Pyodide — Sample Runner]
     end
 
     subgraph Backend["Backend"]
@@ -210,7 +212,7 @@ flowchart LR
 | Area | Technologies |
 |---|---|
 | Backend | FastAPI, SQLAlchemy, SQLite (WAL, MVP), PostgreSQL, WebSockets |
-| Frontend | React, TailwindCSS, Monaco Editor, React Query — all dependencies vendored, no CDN |
+| Frontend | React, TailwindCSS, Monaco Editor, React Query, Wasmer/Pyodide sample runner — all dependencies vendored, no CDN |
 | Judge & Networking | Python, rlimit sandbox (MVP) → Docker/gVisor (P3), Queue System, Multi-Worker, mDNS |
 
 ## Project Layout
@@ -252,6 +254,7 @@ gantt
     Captive Portal               :active, p2a, 2026-06-01, 30d
     Practice Mode                :p2b, 2026-06-15, 30d
     Clarifications                :active, p2c, 2026-07-01, 30d
+    Client-Side Sample Runner (Wasmer/Pyodide) :p2f, 2026-08-01, 20d
     Contest Templates            :p2d, 2026-07-15, 30d
     Leaderboard Freeze + ICPC Penalties :p2e, 2026-08-01, 20d
 

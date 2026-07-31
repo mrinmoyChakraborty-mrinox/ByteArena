@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Runtime data
+Contest/Database/*.db
+Contest/Database/*.db-shm
+Contest/Database/*.db-wal
+
+# Submission sources
+Contest/Submissions/*
+!Contest/Submissions/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
