@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BYTEARENA — MVP Flight Plan (Full)</title>
+<style>
+  :root{
+    --ink:#0B1220; --panel:#121B2E; --panel2:#17233A; --line:rgba(231,236,245,0.09);
+    --text:#E7ECF5; --muted:#8CA0C4; --muted2:#5E6E8C;
+    --a:#52C7B8; --b:#F0A94E; --c:#7C93F0; --d:#E07BC0;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(82,199,184,0.10), transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, rgba(224,123,192,0.08), transparent 60%),
+      var(--ink);
+    color:var(--text); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  code, .mono{font-family:var(--mono);}
+  .topbar{position:sticky; top:0; z-index:50; background:rgba(11,18,32,0.86); backdrop-filter:blur(10px); border-bottom:1px solid var(--line);}
+  .topbar-inner{max-width:1080px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; gap:22px; flex-wrap:wrap;}
+  .wordmark{font-family:var(--mono); font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); white-space:nowrap;}
+  .wordmark b{color:var(--text); font-weight:700;}
+  .tabs{display:flex; gap:6px; flex-wrap:wrap; margin-left:auto;}
+  .tab{font-family:var(--mono); font-size:12.5px; letter-spacing:.03em; padding:8px 13px; border-radius:8px; cursor:pointer; border:1px solid var(--line); color:var(--muted); background:transparent; transition:all .15s ease; display:flex; align-items:center; gap:7px;}
+  .tab .dot{width:7px;height:7px;border-radius:50%;background:var(--muted2);}
+  .tab:hover{color:var(--text); border-color:rgba(231,236,245,0.2);}
+  .tab.active{background:var(--panel2); color:var(--text); border-color:rgba(231,236,245,0.22);}
+  .tab.active .dot{background:var(--accent);}
+  .tab[data-owner="a"].active{--accent:var(--a); box-shadow: inset 0 0 0 1px rgba(82,199,184,.35);}
+  .tab[data-owner="b"].active{--accent:var(--b); box-shadow: inset 0 0 0 1px rgba(240,169,78,.35);}
+  .tab[data-owner="c"].active{--accent:var(--c); box-shadow: inset 0 0 0 1px rgba(124,147,240,.35);}
+  .tab[data-owner="d"].active{--accent:var(--d); box-shadow: inset 0 0 0 1px rgba(224,123,192,.35);}
+  main{max-width:1080px; margin:0 auto; padding:40px 24px 90px;}
+  .view{display:none;} .view.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+  .hero{margin-bottom:36px;}
+  .eyebrow{font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted2); margin-bottom:10px;}
+  h1{font-size:28px; margin:0 0 10px; letter-spacing:-.01em; font-weight:700;}
+  .lede{color:var(--muted); max-width:660px; font-size:15px;}
+  .rail{display:flex; align-items:stretch; gap:0; margin:34px 0 30px; overflow-x:auto; padding-bottom:6px;}
+  .stop{flex:1 0 108px; position:relative; padding:14px 12px 12px; border:1px solid var(--line); border-radius:10px; margin-right:8px; background:var(--panel);}
+  .stop:last-child{margin-right:0;}
+  .stop.done{opacity:.62;}
+  .stop .len{font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:.07em;}
+  .stop .nm{font-weight:700; font-size:13px; margin:5px 0 7px;}
+  .stop .who{display:flex; gap:4px;}
+  .chip{width:15px; height:15px; border-radius:5px; font-family:var(--mono); font-size:8.5px; display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--ink);}
+  .chip.a{background:var(--a);} .chip.b{background:var(--b);} .chip.c{background:var(--c);} .chip.d{background:var(--d);}
+  .chip.off{background:var(--panel2); color:var(--muted2); box-shadow:inset 0 0 0 1px var(--line);}
+  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:30px 0 8px;}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr;}}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px; cursor:pointer; transition:transform .15s ease, border-color .15s ease; border-top:3px solid var(--c-accent);}
+  .card:hover{transform:translateY(-2px); border-color:rgba(231,236,245,0.2);}
+  .card.a{--c-accent:var(--a);} .card.b{--c-accent:var(--b);} .card.c{--c-accent:var(--c);} .card.d{--c-accent:var(--d);}
+  .card .role{font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--c-accent); margin-bottom:8px;}
+  .card h3{margin:0 0 8px; font-size:16px;} .card p{margin:0; color:var(--muted); font-size:13px;}
+  .card .count{margin-top:14px; font-family:var(--mono); font-size:11px; color:var(--muted2);}
+  .note{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:16px 18px; font-size:13.5px; color:var(--muted); margin:26px 0;}
+  .note b{color:var(--text);}
+  .note.warn{border-left:3px solid var(--b);}
+  h2.section-h{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2); font-family:var(--mono); margin:38px 0 14px; padding-top:22px; border-top:1px solid var(--line);}
+  .dodgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media(max-width:700px){.dodgrid{grid-template-columns:1fr;}}
+  .dod{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--muted2); border-radius:8px; padding:12px 14px; font-size:13px; color:var(--muted);}
+  .dod b{color:var(--text); display:block; font-size:12.5px; margin-bottom:4px; font-family:var(--mono);}
+  .dod.done{border-left-color:var(--a); opacity:.75;}
+  .p-head{display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding-bottom:22px; margin-bottom:8px; border-bottom:1px solid var(--line); flex-wrap:wrap;}
+  .p-head .role-tag{font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--p-accent); margin-bottom:8px;}
+  .p-head h1{margin:0 0 8px;} .p-head .mission{color:var(--muted); max-width:560px; font-size:14.5px;}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 16px; text-align:center; min-width:84px;}
+  .stat .n{font-family:var(--mono); font-size:22px; font-weight:700; color:var(--p-accent);}
+  .stat .l{font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:.06em; margin-top:2px;}
+  .phase-h{margin:44px 0 4px; display:flex; align-items:center; gap:12px;}
+  .phase-h .bar{flex:1; height:1px; background:var(--line);}
+  .phase-h span{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted2); white-space:nowrap;}
+  .sprint{margin-top:26px;}
+  .sprint-h{display:flex; align-items:baseline; gap:10px; margin-bottom:6px; flex-wrap:wrap;}
+  .sprint-h .num{font-family:var(--mono); font-size:11px; color:var(--ink); background:var(--p-accent); padding:3px 8px; border-radius:5px; font-weight:700;}
+  .sprint-h .num.done{background:var(--muted2);}
+  .sprint-h h3{margin:0; font-size:16.5px;}
+  .sprint-h .len{font-family:var(--mono); font-size:11px; color:var(--muted2); margin-left:auto;}
+  .sprint-goal{color:var(--muted); font-size:13px; margin:4px 0 14px;}
+  ul.tasks{list-style:none; margin:0; padding:0; border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .task{display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border-bottom:1px solid var(--line); background:var(--panel);}
+  .task:last-child{border-bottom:none;}
+  .task input[type=checkbox]{appearance:none; -webkit-appearance:none; width:16px; height:16px; margin-top:3px; flex:0 0 auto; border:1.5px solid var(--muted2); border-radius:5px; cursor:pointer; position:relative;}
+  .task input[type=checkbox]:checked{background:var(--p-accent); border-color:var(--p-accent);}
+  .task input[type=checkbox]:checked::after{content:""; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid var(--ink); border-width:0 2px 2px 0; transform:rotate(40deg);}
+  .task-body{flex:1; min-width:0;} .task label{cursor:pointer;} .task .txt{font-size:13.5px;}
+  .task .txt code{font-size:12px; background:rgba(231,236,245,0.06); padding:1px 5px; border-radius:4px; color:var(--text);}
+  .tag{display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:.03em; padding:2px 7px; border-radius:20px; margin-left:6px; vertical-align:middle; white-space:nowrap;}
+  .tag.block{background:rgba(240,169,78,0.14); color:#F0B96E; border:1px solid rgba(240,169,78,0.3);}
+  .tag.deliver{background:rgba(82,199,184,0.14); color:#7EDBCB; border:1px solid rgba(82,199,184,0.3);}
+  .tag.solo{background:rgba(224,123,192,0.14); color:#E8A0D3; border:1px solid rgba(224,123,192,0.3);}
+  .tag.done{background:rgba(140,160,196,0.14); color:var(--muted); border:1px solid rgba(140,160,196,0.3);}
+  .tag.gone{background:rgba(224,123,192,0.10); color:#C97BB0; border:1px solid rgba(224,123,192,0.25); text-decoration:line-through;}
+  details.ctx{margin-top:7px;}
+  details.ctx summary{cursor:pointer; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--p-accent); list-style:none; display:inline-flex; align-items:center; gap:5px; user-select:none;}
+  details.ctx summary::-webkit-details-marker{display:none;}
+  details.ctx summary::before{content:"▸"; font-size:9px; display:inline-block; transition:transform .15s ease;}
+  details.ctx[open] summary::before{transform:rotate(90deg);}
+  details.ctx .ctxbody{margin:9px 0 3px 2px; padding:10px 14px; font-size:12.5px; color:var(--muted); line-height:1.65; border-left:2px solid var(--p-accent); background:rgba(255,255,255,0.02); border-radius:0 6px 6px 0;}
+  details.ctx .ctxbody code{font-size:11.5px; background:rgba(231,236,245,0.07); padding:1px 5px; border-radius:4px; color:var(--text);}
+  .checkpoint{margin-top:12px; padding:12px 14px; border-radius:8px; background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--p-accent); font-size:12.5px; color:var(--muted);}
+  .checkpoint b{color:var(--text); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:4px;}
+  footer{max-width:1080px; margin:20px auto 60px; padding:0 24px; color:var(--muted2); font-size:12px; font-family:var(--mono);}
+  .p-view[data-owner="a"]{--p-accent:var(--a);} .p-view[data-owner="b"]{--p-accent:var(--b);}
+  .p-view[data-owner="c"]{--p-accent:var(--c);} .p-view[data-owner="d"]{--p-accent:var(--d);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="wordmark"><b>BYTEARENA</b> · MVP Flight Plan · Full</div>
+    <div class="tabs">
+      <button class="tab active" data-owner="overview" onclick="showView('overview', this)"><span class="dot"></span>Overview</button>
+      <button class="tab" data-owner="a" onclick="showView('a', this)"><span class="dot"></span>A · Backend</button>
+      <button class="tab" data-owner="b" onclick="showView('b', this)"><span class="dot"></span>B · Frontend</button>
+      <button class="tab" data-owner="c" onclick="showView('c', this)"><span class="dot"></span>C · Infra</button>
+      <button class="tab" data-owner="d" onclick="showView('d', this)"><span class="dot"></span>D · Design/Docs</button>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ============= OVERVIEW ============= -->
+  <section class="view active" id="view-overview">
+    <div class="hero">
+      <div class="eyebrow">Full scope: Sprint 0 → MVP Complete</div>
+      <h1>Every task for the entire MVP, start to finish, one owner each.</h1>
+      <p class="lede">Sprints 0–2 are done (built solo before the team split) and are included here for a complete picture — marked accordingly. Sprint 2.5 reflects the Judge0 migration decision, not the original hand-rolled hardening plan. Every task has a Context toggle with the exact file, pattern, or gotcha to know before starting.</p>
+    </div>
+
+    <div class="rail">
+      <div class="stop done"><div class="len">done · solo</div><div class="nm">0 · Skeleton</div><div class="who"><span class="chip a">A</span><span class="chip off">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop done"><div class="len">done · solo</div><div class="nm">1 · CRUD</div><div class="who"><span class="chip a">A</span><span class="chip b">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop done"><div class="len">done · solo</div><div class="nm">2 · Judge+Sandbox</div><div class="who"><span class="chip a">A</span><span class="chip off">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop"><div class="len">3–5 days</div><div class="nm">2.5 · Judge0 Migration</div><div class="who"><span class="chip a">A</span><span class="chip off">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop"><div class="len">1 week</div><div class="nm">3 · Participant Flow</div><div class="who"><span class="chip a">A</span><span class="chip b">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop"><div class="len">3–5 days</div><div class="nm">4 · Leaderboard</div><div class="who"><span class="chip a">A</span><span class="chip b">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop"><div class="len">3–5 days</div><div class="nm">5 · Anti-Cheat</div><div class="who"><span class="chip a">A</span><span class="chip b">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop"><div class="len">1 week</div><div class="nm">6 · Review + State</div><div class="who"><span class="chip a">A</span><span class="chip b">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop"><div class="len">3–5 days</div><div class="nm">6b · AI Complexity</div><div class="who"><span class="chip a">A</span><span class="chip b">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+      <div class="stop"><div class="len">1 day</div><div class="nm">MVP Dry Run</div><div class="who"><span class="chip a">A</span><span class="chip b">B</span><span class="chip c">C</span><span class="chip d">D</span></div></div>
+    </div>
+
+    <div class="note warn"><b>Sprint 2.5 was re-scoped.</b> Originally planned as manual security hardening (provision a low-priv OS user, hand-write iptables rules), it's now a migration to self-hosted <b>Judge0</b> — its <code>isolate</code>-based containment and <code>ENABLE_NETWORK=false</code> default cover both gaps as a property of the new architecture. This pulls a Phase-3 item ("swap to Docker sandbox") forward into the MVP. It also adds a real dependency: Judge0 ships its own Postgres + Redis via docker-compose — fully separate from BYTEARENA's own SQLite DB, but Docker itself becomes a stated prerequisite.</div>
+
+    <div class="note"><b>Sprints 0–2 were built solo</b>, before this 4-person split existed. They're included below fully detailed, attributed to the role each task would fall under, so the whole team has the complete history — not just what's left.</div>
+
+    <div class="note"><b>C and D's scope was deliberately widened</b> beyond "sandbox support" and "documentation" — C now owns capacity planning, adversarial testing, and operational runbook groundwork; D now owns onboarding docs, participant-facing copy, error/empty states, and the full Day-Of Organizer Runbook. Both carry real, load-bearing MVP work, not lighter-weight support roles.</div>
+
+    <div class="grid4">
+      <div class="card a" onclick="showView('a', document.querySelector('[data-owner=a]'))"><div class="role">Backend / Judge</div><h3>A</h3><p>Contest server, judge worker, sandbox, scoring engine — from the very first FastAPI skeleton through AI-assisted review.</p><div class="count">38 tasks · 9 sprints</div></div>
+      <div class="card b" onclick="showView('b', document.querySelector('[data-owner=b]'))"><div class="role">Frontend</div><h3>B</h3><p>Organizer UI, participant app, Monaco, WebSocket leaderboard, review-screen UI, cross-browser and accessibility passes.</p><div class="count">29 tasks · 6 sprints</div></div>
+      <div class="card c" onclick="showView('c', document.querySelector('[data-owner=c]'))"><div class="role">Tooling / Infra</div><h3>C</h3><p>Environment setup, the original sandbox build, fixtures, capacity planning, adversarial testing, backups, runbooks.</p><div class="count">30 tasks · 9 sprints</div></div>
+      <div class="card d" onclick="showView('d', document.querySelector('[data-owner=d]'))"><div class="role">Design / Docs</div><h3>D</h3><p>Docs accuracy from day one, onboarding, organizer dashboard UI, participant copy, the Day-Of Runbook.</p><div class="count">24 tasks · 9 sprints</div></div>
+    </div>
+
+    <h2 class="section-h">Weekly Sync Rule</h2>
+    <div class="note">15 minutes at the start of <b>every</b> sprint: A states the request/response shape for that sprint's endpoints before anyone writes frontend code against it.</div>
+
+    <h2 class="section-h">Gate Checkpoints</h2>
+    <div class="dodgrid">
+      <div class="dod done"><b>0</b>Two devices, one router, one FastAPI response, zero cloud touched — schema and WAL confirmed. <i>(re-verify on current hardware before Sprint 3)</i></div>
+      <div class="dod done"><b>1</b>Contest created, 3 problems added (manual + disk-loaded), verified in SQLite.</div>
+      <div class="dod done"><b>2</b>11/11 DoD verdict cases pass; laptop stays responsive through TLE/MLE.</div>
+      <div class="dod"><b>2.5</b><code>docker-compose up</code> works on target hardware; 11/11 suite passes against Judge0; outbound network call confirmed blocked; stale-claim reaper self-heals a killed worker.</div>
+      <div class="dod"><b>3</b>Second physical device, real login, submit → AC — nobody touched the DB directly.</div>
+      <div class="dod"><b>4</b>3 concurrent submitters, live rank changes, freeze/unfreeze verified.</div>
+      <div class="dod"><b>5</b>Tab-switch shows on dashboard within seconds, correctly timestamped.</div>
+      <div class="dod"><b>6</b>Full mock contest incl. pause/resume/extend + complexity override — no restarts.</div>
+      <div class="dod"><b>6b</b>Every AC submission gets an AI suggestion; accept/override in seconds.</div>
+    </div>
+
+    <h2 class="section-h">MVP Dry Run — shared, whole team</h2>
+    <div class="note">Seed a full mock contest (3+ problems, 5+ accounts) on real LAN hardware, not localhost. <b>A</b> is on-call watching queue/logs. <b>B</b> sits as a participant. <b>C</b> intentionally kills the worker process and drops Wi-Fi mid-submission to confirm recovery. <b>D</b> runs it as organizer and compiles everyone's friction notes afterward.<br><br><b>MVP is done when this completes without anyone touching the database directly.</b></div>
+  </section>
+
+  <!-- ============= PERSON A ============= -->
+  <section class="view p-view" id="view-a" data-owner="a">
+    <div class="p-head">
+      <div><div class="role-tag">Backend / Judge</div><h1>Person A</h1><p class="mission">Owns the contest server, judge worker, sandbox, and scoring engine — from the first line of <code>main.py</code> through the AI complexity batch job. Every downstream track depends on a decision made here.</p></div>
+      <div class="stat"><div class="n">38</div><div class="l">tasks</div></div>
+    </div>
+
+    <div class="phase-h"><span>Already Built (Solo)</span><div class="bar"></div></div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">0</span><h3>Skeleton</h3><span class="len">done</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-0-1" checked><div class="task-body"><label for="a-0-1" class="txt">FastAPI skeleton + <code>GET /health</code>. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Built with a <code>lifespan</code> context manager calling <code>Base.metadata.create_all(bind=engine)</code> on startup, not an <code>on_event</code> hook. Response is <code>{"status":"ok","service":"bytearena"}</code>, slightly richer than originally planned. Static files mount at <code>/</code> via <code>StaticFiles</code> if <code>server/static</code> exists — this is what serves the organizer UI later.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-0-2" checked><div class="task-body"><label for="a-0-2" class="txt"><code>server/database.py</code> — SQLite engine, WAL pragma. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Also sets <code>foreign_keys=ON</code> and <code>busy_timeout=10000</code> — the latter added mid-Sprint-2, not originally planned, specifically so the judge worker and API don't deadlock against each other under WAL. Engine created with <code>check_same_thread=False</code> for FastAPI's threaded/async model.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-0-3" checked><div class="task-body"><label for="a-0-3" class="txt"><code>server/models.py</code> — 11 tables, 7 enums. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Enums: <code>ContestState, SubmissionStatus, Verdict, TestcaseStatus, EventType, ReviewDecision, ComplexityDecision</code> (Python <code>str, enum.Enum</code>). <b>Watch item that recurs all the way through this project:</b> SQLAlchemy stores the enum <b>member name</b> in the DB column, not <code>.value</code> — any raw SQL touching one of these columns needs <code>.name</code>, not the bare string. This first bit the team in Sprint 2's claim query and is worth remembering everywhere else raw SQL appears.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Historical DoD</b>All 11 tables confirmed via <code>.schema</code>, WAL confirmed active.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">1</span><h3>Contest & Problem CRUD</h3><span class="len">done, exceeded scope</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-1-1" checked><div class="task-body"><label for="a-1-1" class="txt"><code>contests.py</code> router — full CRUD. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Went beyond the original plan — <code>PUT</code>/<code>DELETE</code> weren't originally scoped for Sprint 1, only <code>POST</code>/<code>GET</code>, but shipped anyway along with state-transition coercion back to the <code>ContestState</code> enum. Worth knowing: Sprint 6's state-machine work (a19+) is extending an already-solid CRUD layer, not building from nothing.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-1-2" checked><div class="task-body"><label for="a-1-2" class="txt"><code>problems.py</code> router — manual entry, disk-load, testcase CRUD. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Also broader than planned — full testcase <code>GET</code>/<code>POST</code>/<code>DELETE</code> already exists, plus duplicate-<code>code</code> detection returning <code>409</code>, none of which was strictly required for Sprint 1's DoD.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-1-3" checked><div class="task-body"><label for="a-1-3" class="txt"><code>problem_loader.py</code> — disk loader. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Pairs <code>tests/</code> files via chained basename substitution (<code>input→output</code>, <code>in→out</code>, <code>in→ans</code>) rather than a lookup table — functionally identical to <code>PROBLEMS_GUIDE.md</code>'s spec, just implemented differently. <b>Not unit-tested standalone</b> — only exercised via the DoD script and manual UI use against the real <code>Contest/Problems/A|B|C</code> fixtures. Worth an isolated test before this logic changes again.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-1-4" checked><div class="task-body"><label for="a-1-4" class="txt"><code>schemas.py</code> — Pydantic request/response models. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Whole codebase runs Pydantic <b>1.10.26</b>, not v2 — validator syntax follows v1 patterns (<code>@validator</code>, not <code>@field_validator</code>). Keep new schema code consistent with this rather than mixing v2 idioms in.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Historical DoD</b>3 problems added (mix of manual + disk-loaded), verified in SQLite.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">2</span><h3>Judge Worker — Core Pipeline</h3><span class="len">done, 11/11 DoD</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-2-1" checked><div class="task-body"><label for="a-2-1" class="txt"><code>judge/interface.py</code> — <code>compile()</code>/<code>run()</code>. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Interpreted-language subtlety handled correctly: languages that only syntax-check at compile time keep the source file as the "artifact" rather than a nonexistent binary — gated by <code>uses_bin = any("{bin}" in token for token in cfg["run"])</code>. <b>This interface's stability is exactly why Sprint 2.5's Judge0 migration is low-risk</b> — the implementation underneath changes completely, this contract doesn't.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-2-2" checked><div class="task-body"><label for="a-2-2" class="txt"><code>judge/languages.py</code> — python + cpp config. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>run_env_for()</code> prepends the compiler's bin dir to <code>PATH</code> so MSYS2-built C++ binaries find <code>libstdc++-6.dll</code> at runtime — a Windows-only fix that won't be needed on a Linux target. Superseded by Sprint 2.5's <code>language_id</code> mapping once Judge0 lands, but the per-language config pattern carries over conceptually.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-2-3" checked><div class="task-body"><label for="a-2-3" class="txt"><code>judge/worker.py</code> — queue claim + verdict pipeline. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Atomic claim via <code>UPDATE...RETURNING</code> (remember the enum <code>.name</code> gotcha from Sprint 0). Short-circuits remaining testcases as <code>SKIPPED</code> on first failure. <code>JUDGE_ERROR</code> kept distinct from <code>RE</code> for infra failures. Scratch dir wiped in <code>finally</code> even on exception.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-2-4" checked><div class="task-body"><label for="a-2-4" class="txt"><code>judge/compare.py</code> — output comparison. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Lenient exact match — <code>normalize()</code> strips trailing whitespace per line and trailing empty lines so Windows <code>\r\n</code> and trailing-newline differences don't produce false WAs.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Historical DoD</b>11/11 DoD cases pass, laptop stable throughout — the project's most important checkpoint, met and exceeded.</div>
+    </div>
+
+    <div class="phase-h"><span>Remaining Work</span><div class="bar"></div></div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">2.5</span><h3>Judge0 Migration</h3><span class="len">3–5 days · primary owner</span></div>
+      <p class="sprint-goal">Replaces the original "provision a low-priv user, hand-write iptables" plan. Migrate to self-hosted Judge0 — <code>isolate</code>-based containment covers both gaps as a property of the new architecture.</p>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-25-1"><div class="task-body"><label for="a-25-1" class="txt">Pin an exact Judge0 version, review changelog/CVEs.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Do not run <code>:latest</code> unattended for something executing untrusted code. Check the pinned release's changelog and any known sandbox-escape-class issues before committing.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-25-2"><div class="task-body"><label for="a-25-2" class="txt">Rewrite <code>judge/interface.py</code>'s <code>compile()</code>/<code>run()</code> to call Judge0's REST API.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>POST /submissions</code> to create, poll <code>GET /submissions/{token}</code> for a terminal status. <b>Keep the exact same function signatures and dataclasses</b> (<code>CompiledArtifact</code>, <code>CompileError</code>, <code>RunResult</code>, <code>Limits</code>) — nothing in <code>worker.py</code> should need to change beyond what calls into <code>interface.py</code>.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-25-3"><div class="task-body"><label for="a-25-3" class="txt">Build the <code>python</code>/<code>cpp</code> → Judge0 <code>language_id</code> translation table.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Judge0's numeric IDs don't correspond 1:1 to BYTEARENA's language keys — keep the mapping in one place, don't hardcode IDs inline in <code>interface.py</code>.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-25-4"><div class="task-body"><label for="a-25-4" class="txt">Write the Judge0-status → <code>Verdict</code> enum mapping function.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Judge0 has several Runtime Error subtypes beyond BYTEARENA's flat <code>RE</code> — decide deliberately which map to <code>RE</code> vs. <code>JUDGE_ERROR</code>, document the reasoning in a comment, don't bury this as an inline conditional.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-25-5"><div class="task-body"><label for="a-25-5" class="txt">Confirm time/memory unit conversion (Judge0 reports seconds/KB).</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Check units explicitly against <code>runtime_ms</code>/<code>mem_kb</code> — don't assume they line up with what the old sandbox code produced.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-25-6"><div class="task-body"><label for="a-25-6" class="txt">Re-run <code>scripts/test_judge.py</code>'s 11-case suite against Judge0. <span class="tag deliver">regression gate</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">If the interface really stayed stable, this needs zero changes to the test file itself to pass 11/11 again.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-25-7"><div class="task-body"><label for="a-25-7" class="txt">Decide: delete the old <code>judge/sandbox.py</code> dual backend, or keep as fallback.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Either is fine — what's not fine is leaving it half-orphaned with no decision recorded. Put the decision in a comment at the top of the file.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-25-8"><div class="task-body"><label for="a-25-8" class="txt">Add the stale-claim reaper. <span class="tag done">unchanged by the migration</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Protects BYTEARENA's own <code>submissions</code> table (a crash between claiming a row and getting Judge0's response) — unrelated to Judge0's internal queue, still needed regardless of the sandbox backend. Periodic sweep resetting stuck <code>COMPILING</code>/<code>RUNNING</code> rows back to <code>queued</code> after a timeout.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b><code>docker-compose up</code> works on target hardware; 11/11 regression suite passes; network call blocked; reaper self-heals a killed worker.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">3</span><h3>Participant Flow</h3><span class="len">1 week</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-3-1"><div class="task-body"><label for="a-3-1" class="txt"><code>passlib</code> bcrypt hashing helper.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Fully greenfield. <code>participants.password_hash</code> already exists as a column, just unpopulated (only the <code>judge_test</code> fixture row exists). No <code>services/</code> package exists yet — put this in a new top-level <code>server/auth.py</code>, consistent with <code>problem_loader.py</code>'s placement.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-3-2"><div class="task-body"><label for="a-3-2" class="txt"><code>POST /contests/{id}/participants/import</code> — CSV upload.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Follow the existing router style (FastAPI + <code>Depends(get_db)</code>). <code>python-multipart</code> already installed. Hash every password before insert. Decide the validation split with C (c-3-1) rather than duplicating duplicate-detection logic.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-3-3"><div class="task-body"><label for="a-3-3" class="txt"><code>POST /login</code> — session token.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>python-jose</code> already installed, no new dependency needed. Encode <code>contest_id</code> + <code>participant_id</code> as JWT claims. Keep decoupled from heartbeat state — a token stays valid even if heartbeat later goes stale.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-3-4"><div class="task-body"><label for="a-3-4" class="txt">Auth dependency/middleware for protected routes.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Follow the existing <code>Depends(get_db)</code> pattern — a <code>get_current_participant()</code> dependency raising <code>401</code>. Apply to participant endpoints, <b>not</b> organizer endpoints (trusted-network-only per the existing threat model).</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-3-5"><div class="task-body"><label for="a-3-5" class="txt"><code>POST /submissions</code> — write source, insert queued row.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Follow the fixed path convention: <code>Contest/Submissions/&lt;username&gt;/&lt;problem_code&gt;/&lt;timestamp&gt;.&lt;ext&gt;</code>. Insert with <code>status=QUEUED</code> via the ORM. Re-run <code>scripts/test_judge.py</code> once after wiring this to confirm nothing regressed.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-3-6"><div class="task-body"><label for="a-3-6" class="txt"><code>GET /submissions/{id}</code> — poll endpoint.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Keep the payload small — <code>status</code>, <code>verdict</code>, <code>runtime_ms</code>, <code>mem_kb</code>. Full per-testcase breakdown is a Sprint 6 endpoint, not this one.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-3-7"><div class="task-body"><label for="a-3-7" class="txt">Publish the Sprint 3 API contract. <span class="tag deliver">deliver to B, day 2</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Write down exact JSON shapes before B starts wiring real calls — the team's one explicit process rule.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>Second device, real login, submit → AC, no manual DB touches.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">4</span><h3>Realtime Leaderboard</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-4-1"><div class="task-body"><label for="a-4-1" class="txt"><code>server/services/scoring.py</code> — rank/penalty calc.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">First file under a <code>services/</code> package. Rank by <code>(solved DESC, penalty ASC)</code>; penalty = minutes-to-AC + <code>penalty_minutes</code> × wrong attempts. Full recompute per verdict is fine at MVP scale — don't over-engineer incremental updates.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-4-2"><div class="task-body"><label for="a-4-2" class="txt"><code>server/ws/leaderboard.py</code> — WS channel per contest.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">FastAPI's native WS support is enough. In-memory connection registry — don't reach for Redis pub/sub, exactly the premature infra <code>ROADMAP.md</code> warns against.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-4-3"><div class="task-body"><label for="a-4-3" class="txt">Delta-only broadcast on new verdicts.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Compute what actually changed, not a full re-send. C load-tests this at scale (c-4-1) — get correctness right first.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-4-4"><div class="task-body"><label for="a-4-4" class="txt">Freeze-window gating.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>freeze_minutes</code> already a <code>contests</code> column. Organizer connection needs an <code>is_organizer</code> flag decided at connect time, separate from participant JWTs.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>3 concurrent submitters, live rank changes, freeze/unfreeze verified.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">5</span><h3>Anti-Cheat + Rate Limiting</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-5-1"><div class="task-body"><label for="a-5-1" class="txt"><code>POST /heartbeat</code>, disconnect job.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Check if <code>participants</code> has a <code>last_heartbeat</code> column — add it if missing. Simple background asyncio task checking every few seconds.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-5-2"><div class="task-body"><label for="a-5-2" class="txt"><code>POST /events/batch</code>.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>events</code> table + <code>EventType</code> enum already exist — no new schema, just bulk-insert. C's dashboard query layer (c-5-2) reads from this.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-5-3"><div class="task-body"><label for="a-5-3" class="txt">Wire C's rate limiter onto <code>POST /submissions</code>. <span class="tag block">needs C</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">C builds the token-bucket (starts Sprint 3, c-3-3) — apply as middleware, <code>429</code> on exhaustion.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>Tab-switch shows on dashboard within seconds.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">6</span><h3>Manual Review + State Machine</h3><span class="len">1 week</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-6-1"><div class="task-body"><label for="a-6-1" class="txt"><code>contest_state.py</code> + <code>POST /contests/{id}/state</code>.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>ContestState</code> enum and coercion already work from Sprint 1. Add transition guardrails, broadcast changes over the dashboard WS.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-6-2"><div class="task-body"><label for="a-6-2" class="txt">Review + complexity endpoints.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>review_flags</code>/<code>complexity_reviews</code> tables already exist, empty. Return full payload (source, stats, per-testcase breakdown) unlike a-3-6's lightweight shape.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-6-3"><div class="task-body"><label for="a-6-3" class="txt">Wire gate/tiebreak logic into <code>scoring.py</code>.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Re-read <code>ARCHITECTURE.md</code> §4. <code>invalid</code> removes the solve entirely; <code>judge_class</code> only breaks ties among exactly-equal participants. Write hand-checked test cases first.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>Full mock contest incl. pause/resume/extend + complexity override — no restarts.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">6b</span><h3>AI-Assisted Complexity Review</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="a-6b-1"><div class="task-body"><label for="a-6b-1" class="txt"><code>judge/complexity_review.py</code> batch job.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Batch over <code>AC</code> submissions with no review row. Simple regex for constraint bounds (e.g. <code>10^9</code>) is enough — don't build a real parser.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="a-6b-2"><div class="task-body"><label for="a-6b-2" class="txt">Decide + stand up local model vs. cloud. <span class="tag block">D documents</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Ollama is the recommended default — keeps "zero internet, ever" intact. C benchmarks real hardware runtime (c-6b-1) first.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>Every AC submission gets a suggestion; accept/override in seconds.</div>
+    </div>
+  </section>
+
+  <!-- ============= PERSON B ============= -->
+  <section class="view p-view" id="view-b" data-owner="b">
+    <div class="p-head">
+      <div><div class="role-tag">Frontend</div><h1>Person B</h1><p class="mission">No work exists in Sprints 0–2 — genuinely nothing to build until Sprint 1's organizer dashboard, and that stays the only surface until Sprint 3 forces a real app. Once it starts, it's not just "wire up whatever A ships" — navigation, state persistence across screens, loading/error states, cross-browser correctness, and accessibility on the review screen are all real scope that's easy to under-count if only the obvious feature list gets tallied.</p></div>
+      <div class="stat"><div class="n">29</div><div class="l">tasks</div></div>
+    </div>
+
+    <div class="phase-h"><span>Already Built (Solo)</span><div class="bar"></div></div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">0</span><h3>Skeleton</h3><span class="len">no frontend work yet</span></div>
+      <div class="note">Nothing to build — no UI exists until Sprint 1's organizer dashboard. This is expected, not a gap, and padding it with busywork would just be dishonest about what this period actually involved.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">1</span><h3>Organizer UI</h3><span class="len">done</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="b-1-1" checked><div class="task-body"><label for="b-1-1" class="txt">Contests tab — create/list/delete, state dropdown. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Part of <code>server/static/index.html</code> (447 lines total, vanilla JS, no build step, no CDN). Uses a small shared <code>api()</code> fetch wrapper reused across all three tabs — worth reading before Sprint 3's rebuild decision (b-3-1), since some of this wrapper's error-handling patterns are worth carrying forward even if the tab structure itself doesn't survive the rewrite.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-1-2" checked><div class="task-body"><label for="b-1-2" class="txt">Problems + Testcases tabs — Manual/Load-from-Disk modal, testcase view/delete. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">The Add Problem modal's two-mode toggle (Manual fields vs. a single disk-load code input) is the most complex piece of this file — it's also the part most likely to inform how Sprint 3's ProblemView component gets structured, since it's the only existing precedent in this codebase for a UI that renders problem data from the API.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Historical DoD</b>Both Manual and Load-from-Disk flows verified end-to-end.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">2</span><h3>Judge Worker</h3><span class="len">no frontend work yet</span></div>
+      <div class="note">Judging is only reachable from scripts/DB until Sprint 3's submission API exists — nothing for B to build here either. Same honesty note as Sprint 0.</div>
+    </div>
+
+    <div class="phase-h"><span>Remaining Work</span><div class="bar"></div></div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">2.5→3</span><h3>Groundwork</h3><span class="len">start immediately</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="b-3-1"><div class="task-body"><label for="b-3-1" class="txt">Decide, with D, whether to keep the vanilla-JS organizer page or rebuild.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Sprint 3 needs Monaco (awkward to vendor without a bundler) and non-trivial WS state (Sprint 4). This is the natural forcing function — b-1-1/b-1-2's existing fetch-wrapper patterns are worth carrying forward regardless of which way this decision goes.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-3-2"><div class="task-body"><label for="b-3-2" class="txt">Scaffold the participant app build.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Vite is the natural choice. Confirm zero runtime CDN fetches in the production build — audit the actual bundle output, don't assume the scaffold's defaults are clean. This applies to fonts too, not just scripts — a default Vite/React template can quietly reference a Google Font.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-3-2b"><div class="task-body"><label for="b-3-2b" class="txt">Set up a basic client-side routing/navigation shell.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Decide how a participant actually moves between screens — login → problem list → problem view → leaderboard — before Monaco and WebSocket work land on top of whatever structure emerges first. Doesn't need to be fancy (React Router, or a simple state-based view switch similar to the organizer page's existing tab pattern) but it needs to be decided deliberately, not accreted ad hoc across the next several sprints.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-3-3"><div class="task-body"><label for="b-3-3" class="txt"><code>ProblemView</code> — sanitized statement, sample I/O, limits. <span class="tag block">needs D's sanitization spec</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>statement_md</code> already populated correctly (Sprint 1) — pull via <code>GET /problems/{id}</code> today, no login needed currently. Don't ship a naive render while waiting on D's spec (d-3-1).</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">3</span><h3>Participant Flow</h3><span class="len">1 week</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="b-3-4"><div class="task-body"><label for="b-3-4" class="txt">Vendor Monaco, language selector.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Only <code>python</code>/<code>cpp</code> exist right now. Read options from a shared constant, not hardcoded, so Phase 2's "add a language = one config entry" story holds on the frontend side too.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-3-4b"><div class="task-body"><label for="b-3-4b" class="txt">Handle editor state across problem navigation.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">If a participant switches from Problem A to Problem B and back, is their in-progress code for A still there? Decide deliberately and implement it — the honest answer is almost certainly yes, keep per-problem draft state in memory (not persisted server-side, no new schema needed) so an accidental click to another tab doesn't silently discard 20 minutes of unsaved work. This is exactly the kind of thing that generates loud, justified complaints on contest day if it's skipped.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-3-5"><div class="task-body"><label for="b-3-5" class="txt">Submit button. <span class="tag block">needs a-3-7's contract</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Build against a mock response until A ships the real contract. Beyond wiring the request: disable the button while a submission is in flight to prevent accidental double-submits (each one costs a token from c-3-3's rate-limit bucket), and validate the editor isn't empty before allowing submit at all.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-3-6"><div class="task-body"><label for="b-3-6" class="txt">Poll + verdict badge. <span class="tag block">needs d-3-2's spec</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Poll every 1–2s while non-terminal. Seven verdict states need distinct visuals per d-3-2's spec. Make sure the loading state here reads as visually distinct from b-3-5's "submitting" state — a participant should be able to tell "my request is being sent" apart from "my code is being judged," since those failing for different reasons need different reactions from them.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-3-7"><div class="task-body"><label for="b-3-7" class="txt">Login screen. <span class="tag block">needs d-3-4's copy</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Token needs to survive a refresh but doesn't need long-term persistence — a clean re-login flow is fine for a single contest sitting. Wire D's actual error copy (d-3-4) for wrong-password / contest-not-started / contest-already-ended cases rather than surfacing raw API error bodies to a participant mid-contest.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>Second device, real participant, submit → AC, no DB touches.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">4</span><h3>Realtime Leaderboard</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="b-4-1"><div class="task-body"><label for="b-4-1" class="txt">Fetch initial leaderboard state before subscribing to deltas.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">A-4-3's WS channel only broadcasts deltas from the moment of connection forward — a participant loading the leaderboard for the first time, or reconnecting after a drop, needs a full current snapshot first. Confirm with A whether there's a dedicated <code>GET</code> endpoint for this or whether the WS handshake itself sends an initial full-state message on connect, and build against whichever gets decided — don't assume this is automatically covered just because "the WS channel exists."</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-4-1b"><div class="task-body"><label for="b-4-1b" class="txt"><code>Leaderboard</code> page — apply deltas on top of the initial state.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Merge by <code>participant_id</code>, don't expect a full replacement from each delta message. Confirm the exact delta payload shape with A before building the merge logic — getting this wrong produces a leaderboard that silently drifts out of sync rather than failing loudly, which is worse.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-4-2"><div class="task-body"><label for="b-4-2" class="txt">Countdown/timer UI.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Read from WS/live state, not computed once on load — Sprint 6's extend action would leave a stale timer otherwise.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-4-3"><div class="task-body"><label for="b-4-3" class="txt">Rank-change visual feedback.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">A plain instant re-sort of the standings table is disorienting when a participant's own rank moves — even a lightweight highlight/transition on updated rows meaningfully helps readability, without needing an external animation library given the no-CDN constraint. Keep it simple (a CSS transition on position/background is enough), this isn't the place to over-invest.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>3 concurrent submitters, live updates, freeze verified.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">5</span><h3>Anti-Cheat Signals</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="b-5-1"><div class="task-body"><label for="b-5-1" class="txt">Client event listeners, batched flush.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>visibilitychange</code>, <code>blur</code>/<code>focus</code>, <code>fullscreenchange</code> — batch every few seconds in one request, not one per event. One-request-per-event would be chatty at 30–50+ participants on shared contest Wi-Fi.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-5-2"><div class="task-body"><label for="b-5-2" class="txt">Internet-probe background script.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">A <em>successful</em> fetch to the public endpoint is the anomaly here, not a failure — the whole premise is "no internet." Probe every 30–60s against something stable.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-5-3"><div class="task-body"><label for="b-5-3" class="txt">Build a visible connection-status indicator for participants.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Heartbeats (a-5-1) and the internet probe (b-5-2) are currently invisible to the participant — if their own Wi-Fi is flaky, they have no way to notice their heartbeat might be silently failing until they get flagged as disconnected on the organizer's dashboard. A small, unobtrusive "connected" indicator gives a participant a chance to notice and fix a bad connection before it turns into an anti-cheat false-flag against them.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-5-4"><div class="task-body"><label for="b-5-4" class="txt">Cross-browser check: Chrome + Firefox.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">README explicitly names both browsers as supported participant clients. Fullscreen API behavior, WebSocket reconnect timing, and <code>fullscreenchange</code> event quirks have historically differed between the two — actually test Sprint 5's anti-cheat listeners on both, not just whichever browser development happened to use, since this is exactly the kind of thing that silently works in one and silently fails in the other.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>Tab-switch shows on dashboard within seconds.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">6</span><h3>Manual Review</h3><span class="len">1 week</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="b-6-1"><div class="task-body"><label for="b-6-1" class="txt"><code>Review</code> screen shell. <span class="tag block">needs d-6-1's UX pass</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Needs a-6-2's fuller payload (source, stats, full per-testcase breakdown), not a-3-6's lightweight poll shape. Wait for D's usability pass before final markup — a judge uses this repeatedly under time pressure.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-6-1b"><div class="task-body"><label for="b-6-1b" class="txt">Per-testcase pass/fail breakdown display.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">A-6-2's endpoint returns the full per-testcase <code>verdicts</code> array — render this as an actual per-test pass/fail list, not just the aggregate verdict already shown elsewhere on the screen. This is the specific detail a judge needs to understand <em>why</em> a submission failed on some tests and not others, and it's directly relevant to the complexity-review conversation this feeds into during Sprint 6b.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-6-1c"><div class="task-body"><label for="b-6-1c" class="txt">Wire approve/reject/flag actions.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Connect the three review-decision controls to a-6-2's <code>POST /submissions/{id}/review</code>. Reflect the saved decision immediately in the UI (optimistic update) rather than requiring a full reload for a judge to see their own action take effect — small detail, but it's the difference between a screen that feels responsive and one that feels laggy during a long review session.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-6-2"><div class="task-body"><label for="b-6-2" class="txt">Pause/resume/extend controls.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Wire to a-6-1. Needs immediate UI feedback — optimistic update or a clear loading state — since pausing a live contest is exactly the kind of action an organizer needs to trust worked instantly, not wonder about.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-6-3"><div class="task-body"><label for="b-6-3" class="txt">Keyboard-navigation pass on the Review screen.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">A judge moving quickly through many submissions during post-contest review benefits enormously from keyboard shortcuts — approve/reject/next without reaching for the mouse every time. Check that whatever shortcuts get added don't conflict with Monaco's own default keybindings on the source-view pane.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Gate</b>Full mock contest incl. pause/resume/extend + override — no restarts.</div>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">6b</span><h3>AI Complexity Review</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="b-6b-1"><div class="task-body"><label for="b-6b-1" class="txt">Wire AI suggestion + one-click accept into Review.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Show <code>ai_suggested_class</code>/<code>ai_reasoning</code> inline next to the judge's manual field, pre-fill on accept but keep it editable. Override-logging to <code>judge_note</code> is A's backend job — nothing extra needed here beyond submitting whatever the judge's final decision actually was.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="b-6b-2"><div class="task-body"><label for="b-6b-2" class="txt">Handle the "no AI suggestion yet" state.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">If a judge opens the Review screen before a-6b-1's batch job has processed a given submission, the UI needs a sane, clearly-labeled state — not a blank gap that reads as a bug. Make it obvious this is "pending," not "the AI has nothing to say."</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Role in dry run</b>Sit as one of the participant seats. Log friction from that vantage point.</div>
+    </div>
+  </section>
+
+  <!-- ============= PERSON C ============= -->
+  <section class="view p-view" id="view-c" data-owner="c">
+    <div class="p-head">
+      <div><div class="role-tag">Tooling / Infra</div><h1>Person C</h1><p class="mission">Owns environment setup, the original hand-rolled sandbox, fixtures, load-testing, backups, capacity planning, and operational runbooks. Not just "the person who tests things" — the person who owns whether the system survives contact with a real contest, from dependency pinning on day one through the crash-recovery procedure on contest day.</p></div>
+      <div class="stat"><div class="n">30</div><div class="l">tasks</div></div>
+    </div>
+
+    <div class="phase-h"><span>Already Built (Solo)</span><div class="bar"></div></div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">0</span><h3>Skeleton</h3><span class="len">done</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-0-1" checked><div class="task-body"><label for="c-0-1" class="txt">Environment setup — venv, dependency install. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Actual stack per the audit: Python 3.13 (miniforge), FastAPI 0.108.0, Uvicorn 0.49.0, SQLAlchemy 2.0.51, Pydantic 1.10.26 (v1-style — note this for anyone writing new schemas), g++ 15.2.0 via MSYS2, Windows 11 host.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-0-2" checked><div class="task-body"><label for="c-0-2" class="txt"><code>.gitignore</code>. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Covers <code>Contest/Database/*.db*</code>, <code>Contest/Submissions/</code>, <code>Contest/Runs/</code> (added once Sprint 2's scratch-dir pattern existed), <code>.venv/</code>, <code>__pycache__/</code>.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-0-3"><div class="task-body"><label for="c-0-3" class="txt">LAN round-trip proof — cross-device, WAN-disabled. <span class="tag block">needs re-verification</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Proven once during original Sprint 0, but the audit only re-verified <code>localhost:8000</code> — the actual cross-device check hasn't been re-confirmed since dev moved to the current Windows machine. <b>Still open</b> — redo this before trusting it going into Sprint 3.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-0-4"><div class="task-body"><label for="c-0-4" class="txt">Pin exact dependency versions in <code>requirements.txt</code>.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">The audit lists what's currently installed (FastAPI 0.108.0, Uvicorn 0.49.0, SQLAlchemy 2.0.51, Pydantic 1.10.26) but doesn't confirm these are pinned with exact <code>==</code> versions rather than loose ranges. A fresh <code>pip install</code> on a different machine six months from now could silently pull breaking changes — especially risky here since Pydantic v1 vs. v2 is a real behavioral difference (validator syntax, not just a version bump), not a cosmetic one. Also worth a comment somewhere noting the expected g++ version (MSYS2's 15.2.0) — toolchain-version-sensitive bugs are exactly what bit the C++ MLE test in Sprint 2 (<code>-O2</code> eliding dead code), and a different compiler version on a different machine could reintroduce similar surprises silently.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">1</span><h3>Fixtures & Verification</h3><span class="len">done</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-1-1" checked><div class="task-body"><label for="c-1-1" class="txt">Sample problems <code>Contest/Problems/A|B|C</code>. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Problem A = "Hello BYTEARENA" (sum of two ints, 1000ms/256MB, 3 testcase pairs), matching <code>PROBLEMS_GUIDE.md</code>'s worked example exactly. These fixtures get reused as Sprint 2's actual DoD test data.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-1-2" checked><div class="task-body"><label for="c-1-2" class="txt">Verify Manual + Load-from-Disk flows persist correctly. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Checked via direct <code>sqlite3</code> queries, not just trusting the UI — this habit is worth carrying into every future sprint's verification step.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-1-3"><div class="task-body"><label for="c-1-3" class="txt">Stress-test <code>problem_loader.py</code> against malformed input.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">The loader raises "clear errors" per design for missing directories/unmatched inputs, but this has only ever been exercised against well-formed fixtures (A/B/C). Deliberately try: a <code>tests/</code> folder with an orphaned <code>input5.txt</code> and no matching output, a <code>config.json</code> with invalid JSON, a problem directory missing <code>statement.md</code> entirely — and confirm each produces a sane organizer-facing error rather than an unhandled 500. This is exactly the kind of edge case that's easy to skip when the fixtures always work, and an organizer <em>will</em> eventually upload something malformed on a real contest day.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">2</span><h3>Original Sandbox + DoD Suite</h3><span class="len">done, superseded in 2.5</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-2-1" checked><div class="task-body"><label for="c-2-1" class="txt"><code>judge/sandbox.py</code> — POSIX + Windows dual backend. <span class="tag done">done</span> <span class="tag gone">retired in 2.5</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">POSIX: <code>setsid()</code>+<code>killpg</code>, <code>RLIMIT_AS</code>/<code>RLIMIT_CPU</code>, enforcement/verdict memory split. Windows: Job Object with poll-based <code>taskkill</code> fallback for when job assignment fails (error 6, observed in this dev shell). <b>Worth reading before Sprint 2.5's migration starts</b> — it defines exactly what behavior needs preserving (or deliberately changing) in the Judge0 rewrite.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-2-2" checked><div class="task-body"><label for="c-2-2" class="txt"><code>scripts/test_judge.py</code> — 11-case DoD suite. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Found 2 real bugs: Job Object assignment failing in restrictive shells (→ fallback path), and <code>-O2</code> eliding the C++ MLE test's dead allocation (→ fixed via <code>printf(v.back())</code>). <b>This suite is the regression gate for Sprint 2.5</b> — must pass 11/11 with zero changes to the test file after the Judge0 swap.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-2-3" checked><div class="task-body"><label for="c-2-3" class="txt">Verify laptop responsiveness / zero orphan processes. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Confirmed zero stray processes and zero leftover <code>Contest/Runs/</code> entries across all 11 cases — the actual proof the sandbox works, not just "the verdict was correct."</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-2-4"><div class="task-body"><label for="c-2-4" class="txt">Capacity-plan judge throughput.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Measure how many submissions per minute a single judge worker can realistically process end-to-end (compile + run + compare + DB round-trip) — the 11-case suite's raw run times (fastest AC ~10-43ms) are only part of the real figure once compile time and claim/write overhead are included. This directly informs Sprint 5's rate-limiter tuning (c-3-3) and answers a question the audit explicitly flagged as untested: whether a single worker is actually enough for a 30-50 participant contest, or whether multi-worker concurrency needs to become a real, tested thing before contest day rather than a "should work in theory" assumption resting on SQLite's single-writer semantics.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="phase-h"><span>Remaining Work</span><div class="bar"></div></div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">2.5</span><h3>Judge0 Migration — supporting role</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-25-1"><div class="task-body"><label for="c-25-1" class="txt">Stand up <code>docker-compose.yml</code> on the target contest-day machine.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Server + worker + <code>postgres:16.2</code> + <code>redis:7.2.4</code> per Judge0's reference compose file. Confirm it runs before anything else in this sprint depends on it — not just on the dev machine.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-25-2"><div class="task-body"><label for="c-25-2" class="txt">Configure <code>judge0.conf</code> — auth token, <code>ENABLE_NETWORK=false</code>, limits.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Real auth token even on LAN-only (defense in depth). Confirm <code>ENABLE_NETWORK=false</code> — Judge0's default, replaces the old manual iptables task entirely. Set time/memory defaults matching <code>PROBLEMS_GUIDE.md</code> (1000ms/256MB).</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-25-3"><div class="task-body"><label for="c-25-3" class="txt">Write the network-block verification test.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">A testcase source attempting <code>socket.connect()</code> to a real external address — confirm Judge0's config actually blocks it, don't just trust the default is engaged.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-25-4"><div class="task-body"><label for="c-25-4" class="txt">Confirm Judge0 runs correctly via Docker on the real target OS.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Replaces the old Linux-vs-Windows sandbox-hardening decision. Docker Desktop on Windows runs Linux containers via WSL2, so isolation shouldn't meaningfully differ by host OS — verify on the actual hardware rather than assuming.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-25-5"><div class="task-body"><label for="c-25-5" class="txt">Set up log capture and rotation for the Judge0 containers.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Docker's default logging driver keeps container logs with no rotation configured — over a multi-hour contest with hundreds of submissions, unrotated JSON logs can grow large, and more importantly, if something goes wrong mid-contest you need to be able to run <code>docker-compose logs -f judge0-worker</code> and actually find the relevant failure fast, not scroll through hours of noise. Configure a reasonable <code>max-size</code>/<code>max-file</code> rotation policy in the compose file and write down the exact commands to tail logs live during a contest, not just how to view them after the fact.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-25-6"><div class="task-body"><label for="c-25-6" class="txt">Write a Judge0-crash recovery procedure.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">If a Judge0 container dies mid-contest (OOM, crash, whatever), what actually happens? Does <code>docker-compose restart judge0-worker</code> bring it back cleanly? Does the in-flight submission get lost, or does A's stale-claim reaper (a-25-8) catch it and requeue automatically once BYTEARENA's own row goes stale? <b>Test this deliberately</b> — kill a Judge0 container mid-submission on purpose — and write down exactly what happens and what to do about it. Contest day is the wrong time to discover the answer for the first time.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">3</span><h3>Participant Flow — infra prep</h3><span class="len">1 week</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-3-1"><div class="task-body"><label for="c-3-1" class="txt">CSV import validation tooling.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Coordinate with A on where this lives — either a standalone function A's <code>import</code> endpoint calls, or a separate pre-check tool organizers run before uploading. At minimum: duplicate usernames, malformed rows, empty passwords. Decide the error format so it surfaces something an organizer can actually act on, not a raw stack trace.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-3-2"><div class="task-body"><label for="c-3-2" class="txt">Session-token infra prep.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">If A's <code>POST /login</code> uses JWTs via <code>python-jose</code>, your job is making sure the signing secret is an environment variable loaded at startup, not hardcoded or committed to the repo. Don't over-engineer a full secrets-management system for a single-laptop deployment — an env var with a documented rotation-before-contest-day habit is enough at this scale.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-3-3"><div class="task-body"><label for="c-3-3" class="txt">Start the token-bucket rate limiter.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Standard algorithm, keyed per <code>participant_id</code> — a dict of <code>participant_id → (tokens, last_refill_time)</code> with a check-and-decrement function. Fully standalone, doesn't need anything else this sprint to exist, which is exactly why it starts here rather than waiting for Sprint 5. Use c-2-4's throughput numbers to pick a sane refill rate rather than guessing a round number.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-3-4"><div class="task-body"><label for="c-3-4" class="txt">Load-test the CSV import with a large participant list.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Import 100+ synthetic rows, not just the handful used in dev, and confirm the endpoint doesn't time out or hold the DB locked for an uncomfortable duration under WAL. SQLite handles concurrent reads fine under WAL, but a large single bulk-insert transaction can still briefly block other writers — like an in-progress judge worker claim happening at the same moment. Check whether this actually matters at MVP scale rather than assuming it's a non-issue.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">4</span><h3>Leaderboard — verification</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-4-1"><div class="task-body"><label for="c-4-1" class="txt">Load-test the WS channel.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Script that opens N simulated WebSocket connections and floods <code>POST /submissions</code> from N fake accounts concurrently. Watch specifically whether A's delta-only broadcast (a-4-3) stays delta-sized under load, or balloons back toward full-table re-sends when many verdicts land in the same second — that's the actual failure mode worth catching here, not just "does it work at all."</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-4-2"><div class="task-body"><label for="c-4-2" class="txt">Confirm WS reconnect behavior.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Drop a participant's WS connection mid-contest (throttle it or kill it deliberately) and confirm B's reconnect logic (b-4-1) re-syncs to current server state — not a silent failure to reconnect, and not replaying stale local state as if it were current.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-4-3"><div class="task-body"><label for="c-4-3" class="txt">Document the acceptable WS latency/reconnect SLA.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">There's currently no stated target for "how long is too long" for a leaderboard update to arrive after a verdict, or for a dropped connection to reconnect. Pick concrete numbers based on what c-4-1's load test shows is actually achievable (e.g. updates within 2s, reconnect within 5s of Wi-Fi returning) and write them down — this turns "is this working correctly" during the MVP dry run into something checkable against a real bar, not a vibe.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">5</span><h3>Anti-Cheat + Rate Limiting</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-5-1"><div class="task-body"><label for="c-5-1" class="txt">Finish rate limiter, hand off to A. <span class="tag deliver">hand off</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Pairing with A on the actual FastAPI middleware wiring (a-5-3) is probably more efficient than building it fully separately, since A owns the submissions router this touches.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-5-2"><div class="task-body"><label for="c-5-2" class="txt">Events query layer for the dashboard.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Queue depth is a simple <code>COUNT(*) WHERE status='queued'</code>. Worker health needs a "last seen" concept that doesn't exist yet — workers don't currently heartbeat themselves. May need a lightweight <code>workers</code> table, or have <code>judge/worker.py</code> periodically touch a timestamp — decide with A since it touches <code>worker.py</code>, and note post-migration this also needs to account for Judge0's own worker containers, not just BYTEARENA's polling process.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-5-3"><div class="task-body"><label for="c-5-3" class="txt">Adversarial pass: try to defeat the rate limiter and heartbeat system.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Actually try to break what's built rather than just verify the happy path. Script rapid-fire submissions from one account to confirm the token bucket genuinely blocks at the configured rate. Try sending a fabricated heartbeat <code>POST</code> carrying a different participant's <code>participant_id</code> — if auth doesn't specifically prevent this, a technically-savvy participant could spoof another participant's presence signal. Findings go back to A, but flagging a real gap here beats assuming the design worked as intended just because it was implemented as specified.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">6</span><h3>Backups + Resilience</h3><span class="len">1 week</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-6-1"><div class="task-body"><label for="c-6-1" class="txt"><code>scripts/backup_db.py</code>.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Must include the WAL and SHM files alongside the main <code>.db</code> — WAL-mode SQLite's committed state isn't fully captured by copying just the main file while the DB is open. Either checkpoint the WAL first or copy all three files atomically enough that a restore actually works. <b>Test the restore path</b>, not just the backup — an unverified backup isn't actually insurance.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-6-2"><div class="task-body"><label for="c-6-2" class="txt">Kill-and-restart test.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Kill the FastAPI server process (not the judge worker, a separate process) mid-mock-contest, restart it, confirm contest state — timer, standings, queue — is fully reconstructable from the DB alone. Anything missing after restart is a real bug, not something to explain away.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-6-3"><div class="task-body"><label for="c-6-3" class="txt">Build a one-command contest reset script.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Between mock-contest dry runs — and there will likely be more than one before the real event — resetting to a clean state (wipe submissions, reset contest state to <code>scheduled</code>, clear <code>Contest/Runs</code> and <code>Contest/Submissions</code>) by hand via manual SQL is slow and error-prone. A <code>scripts/reset_contest.py --contest-id X</code> that does this safely (confirmation prompt, doesn't touch problem/participant data unless explicitly asked) saves real time across however many practice runs the team ends up needing.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">6b</span><h3>AI Complexity Review</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="c-6b-1"><div class="task-body"><label for="c-6b-1" class="txt">Benchmark Ollama runtime on target hardware.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Time A's actual batch job against 10–20 real submissions on the real target organizer laptop before committing to the local-model path — minutes-per-submission rather than seconds changes whether this is a speed-up or a bottleneck on judging day.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="c-6b-2"><div class="task-body"><label for="c-6b-2" class="txt">Document Judge0 + Ollama resource contention.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">If Judge0's containers and Ollama are both running on the same organizer laptop, check whether they meaningfully compete for CPU/memory when both are active — this specifically matters right after a contest ends, when the organizer wants to kick off complexity review while the judge queue might still be draining trailing submissions. Test running both concurrently on the real hardware, not just each in isolation, and note the finding in the runbook D is writing (d-6-3).</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Role in dry run</b>Intentionally kill the worker process and drop Wi-Fi mid-submission. Confirm recovery.</div>
+    </div>
+  </section>
+
+  <!-- ============= PERSON D ============= -->
+  <section class="view p-view" id="view-d" data-owner="d">
+    <div class="p-head">
+      <div><div class="role-tag">Design / Docs</div><h1>Person D</h1><p class="mission">Owns documentation accuracy from the very first sprint, the organizer dashboard UI, review-screen usability, participant-facing copy, and operational/onboarding docs. Not just "the person who writes things down" — the person who makes the system usable by someone who isn't the one who built it, from a new teammate's first setup to a stressed organizer's contest-day runbook.</p></div>
+      <div class="stat"><div class="n">24</div><div class="l">tasks</div></div>
+    </div>
+
+    <div class="phase-h"><span>Already Built (Solo)</span><div class="bar"></div></div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">0</span><h3>Skeleton</h3><span class="len">done</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-0-1" checked><div class="task-body"><label for="d-0-1" class="txt">Confirm repo tree matches README's Project Layout. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Actual build tracks the documented <code>Contest/{Problems,Submissions,Database,Logs,Config}</code> layout closely — but the <code>server/</code> and <code>judge/</code> app code trees aren't shown in README's tree at all, only the runtime data folder. Worth adding for a new contributor's first read.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-0-2"><div class="task-body"><label for="d-0-2" class="txt">Write a <code>CONTRIBUTING.md</code> / new-teammate setup doc.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Right now, getting from <code>git clone</code> to a running server requires knowing steps scattered across the audit and this planning doc — venv creation, <code>pip install</code> (with <code>--break-system-packages</code> if needed on some systems), g++/MSYS2 setup on Windows, how to seed the <code>Contest/Problems</code> fixtures. Write the actual commands down in one place a new contributor can follow without archaeology. Worth doing early, since three more people are about to onboard onto this repo for the first time.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">1</span><h3>Problem Docs</h3><span class="len">done</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-1-1" checked><div class="task-body"><label for="d-1-1" class="txt"><code>PROBLEMS_GUIDE.md</code> — both entry methods documented. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Needs to stay in sync with <code>problem_loader.py</code>'s actual matching logic (basename substitution, not a literal lookup table) — periodically re-check the doc's claims against real loader behavior, especially if the loader ever changes.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-1-2"><div class="task-body"><label for="d-1-2" class="txt">Design empty/first-run states for the organizer UI.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">The current vanilla-JS dashboard has 3 tabs (Contests/Problems/Testcases) — what does an organizer see the very first time they open it with zero contests created? A blank table with no guidance reads as broken, not empty. Sketch reasonable empty-state copy/layout for each tab now (doesn't need implementation yet) to hand off whenever Sprint 3's frontend decision (b-3-1) lands.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num done">2</span><h3>Architecture Accuracy</h3><span class="len">done, stopgap</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-2-1" checked><div class="task-body"><label for="d-2-1" class="txt">Confirm <code>ARCHITECTURE.md</code> §3 matches the built sandbox. <span class="tag done">done</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">The built sandbox has an enforcement/verdict memory split that goes beyond the original spec — worth capturing as a real design decision. <b>This became moot once Sprint 2.5's Judge0 migration was decided</b> — §3 needs a full rewrite regardless (see the OpenCode prompt for that migration), so treat this Sprint 2 doc-check as a stopgap that already served its purpose, not a final state.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-2-2"><div class="task-body"><label for="d-2-2" class="txt">Write a plain-language verdict glossary.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Organizers running this for a first-time coding club or school hackathon may not all be familiar with competitive-programming judge terminology. A short glossary (README or a separate <code>ORGANIZER_GUIDE.md</code>) explaining AC/WA/TLE/MLE/RE/CE in plain language helps organizers actually explain results to a confused participant on contest day, rather than everyone guessing what "MLE" means mid-contest.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="phase-h"><span>Remaining Work</span><div class="bar"></div></div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">2.5</span><h3>Judge0 Migration — docs</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-25-1"><div class="task-body"><label for="d-25-1" class="txt">Update README.md's offline claim + Security section for Judge0.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Docker becomes a real, stated prerequisite — still fully offline once cached, but "just a laptop and a router" needs an explicit asterisk, not an implied one. Update the Tech Stack Mermaid diagram's Judge subgraph and the Gantt chart's Phase 3 "Container Sandbox" entry, which this migration now supersedes.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-25-2"><div class="task-body"><label for="d-25-2" class="txt">Rewrite <code>ARCHITECTURE.md</code> §3 for the Judge0 stack.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Describe the docker-compose stack, <code>privileged: true</code> tradeoff (with mitigation: pin versions, review CVEs), and — critically — an explicit callout that Judge0's Postgres/Redis are fully internal to its own network, completely separate from BYTEARENA's own SQLite DB. This distinction needs to be unambiguous to a reader, not implied.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-25-3"><div class="task-body"><label for="d-25-3" class="txt">Write a short "what changed and why" note for the team.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Judge0 is a genuinely different architecture than what Sprints 0–2 were built against. A one-page internal note (separate from the formal <code>ARCHITECTURE.md</code> rewrite) explaining in plain terms why the switch happened and what's different day-to-day (Docker now needs to be running before <code>uvicorn</code> starts, etc.) helps the rest of the team — especially B, about to start Sprint 3 against this changed foundation — get oriented fast without reading the full technical migration diff.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">3</span><h3>Participant Flow — specs</h3><span class="len">1 week</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-3-1"><div class="task-body"><label for="d-3-1" class="txt">Markdown sanitization spec. <span class="tag deliver">deliver to B</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody"><code>statement_md</code> is organizer-authored content rendered into every participant's browser. Pick a specific library/allowlist, not just "sanitize it" — B needs something concrete to implement (b-3-3). Recommend defensive sanitization even though organizers are semi-trusted in this single-laptop MVP — it's cheap insurance against a mistake, not just a hostile actor.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-3-2"><div class="task-body"><label for="d-3-2" class="txt">Verdict badge spec. <span class="tag deliver">deliver to B</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Seven states now that <code>JUDGE_ERROR</code> is tracked separately from <code>RE</code> per the enum list. Give B exact colors/labels for all seven, not just the common ones, so nothing falls back to an undesigned default during a real contest.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-3-3"><div class="task-body"><label for="d-3-3" class="txt">Update README/PROBLEMS_GUIDE if sanitization changes what's allowed.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Check the existing sample problems (<code>Contest/Problems/A|B|C</code>) against the new sanitization rule as a real-world sanity check before updating docs.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-3-4"><div class="task-body"><label for="d-3-4" class="txt">Write participant-facing onboarding copy. <span class="tag deliver">deliver to B</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">The actual microcopy for the login screen, a short "how to submit" instruction shown on first login, and error messages for common failure cases — wrong password, contest not started yet, contest already ended. Hand these strings to B as a small content spec rather than leaving B to write placeholder copy that quietly ships as final.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-3-5"><div class="task-body"><label for="d-3-5" class="txt">Design error/loading states for <code>ProblemView</code>. <span class="tag deliver">deliver to B</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">What does a participant see if <code>GET /problems/{id}</code> fails (network blip, wrong URL) or is slow to load? A blank white screen reads as broken. Spec a simple loading skeleton and an error-with-retry state — small scope, but exactly the kind of polish that's easy to skip and obvious when it's missing during a live contest on shaky Wi-Fi.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">4</span><h3>Leaderboard — spec</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-4-1"><div class="task-body"><label for="d-4-1" class="txt">Organizer-vs-participant leaderboard distinction. <span class="tag deliver">deliver to B</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">The organizer sees live standings through the freeze window (a-4-4), participants don't. Make that difference visually unmistakable on the participant side — silently-stale data that looks live is worse than an obvious frozen banner.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-4-2"><div class="task-body"><label for="d-4-2" class="txt">Check README's leaderboard feature description against reality.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Quick audit-style check — read the Live Leaderboard bullet against what A actually built and correct any drift, the same pattern the original project audit flagged as worth watching for.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-4-3"><div class="task-body"><label for="d-4-3" class="txt">Design the "contest ended" final state. <span class="tag deliver">deliver to B</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">What does the leaderboard/problem view actually look like once <code>state=ended</code>? Submissions should probably be disabled with a clear message rather than silently failing against a dead endpoint, and the leaderboard should read as final/official rather than still visually looking "live." This is a real state the app needs to handle explicitly, not an edge case that's safe to skip until someone notices it's missing mid-contest.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">5</span><h3>Organizer Dashboard</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-5-1"><div class="task-body"><label for="d-5-1" class="txt">Build <code>OrganizerDashboard</code>. <span class="tag block">needs c-5-2 + A's endpoints</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">An actual implementation task, not just a spec. Consumes C's query layer (c-5-2) and A's heartbeat/event endpoints (a-5-1/a-5-2). The main design challenge: one merged timeline mixing heartbeats, tab-switches, and warnings per participant, sorted by time — don't build three separate widgets when the design explicitly calls for one unified view.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-5-2"><div class="task-body"><label for="d-5-2" class="txt">Decide warning severity treatment.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Tab-switch and internet-detected are meaningfully different signals — one's ambiguous, the other's a real red flag. Decide whether they get different visual weight (color, icon, position) so an organizer scanning during a live contest can triage at a glance rather than reading every log line with equal attention.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-5-3"><div class="task-body"><label for="d-5-3" class="txt">Write organizer-facing incident-response guidance.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">When a tab-switch or internet-detected warning fires, what is the organizer actually supposed to <em>do</em> about it? A flat log of warnings with no guidance leaves organizers guessing whether to intervene, quietly flag it for post-contest review, or ignore it entirely. Write a short procedural note — not a UI spec, actual written guidance — covering the team's recommended response for each warning type, to accompany d-5-2's severity-level design and feed into d-6-3's runbook.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">6</span><h3>Manual Review + Docs Hygiene</h3><span class="len">1 week</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-6-1"><div class="task-body"><label for="d-6-1" class="txt">Review screen UX pass. <span class="tag deliver">before B builds b-6-1</span></label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Do this before B builds final markup — a judge opens this screen repeatedly under real time pressure post-contest. Design the fastest path to approve/reject/flag a straightforward AC, versus what a flagged/complicated case actually needs shown. Treat it as a real usability problem, not "a form with some fields."</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-6-2"><div class="task-body"><label for="d-6-2" class="txt">Keep the roadmap docs current.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Same audit-and-update pattern already run once this session on <code>ROADMAP_DETAILED.md</code>/<code>MVP_TASKLIST.md</code> — close that loop again after Sprint 6 ships. Check real file paths/behavior against what the docs claim, not memory of the original plan.</div></details>
+        </div></li>
+        <li class="task"><input type="checkbox" id="d-6-3"><div class="task-body"><label for="d-6-3" class="txt">Write the Day-Of Organizer Runbook.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">A step-by-step document for someone running an actual contest for the first time: a pre-contest checklist (seed accounts, verify LAN, start Judge0 via <code>docker-compose up</code>, start the server), what to watch during the contest (what a healthy queue depth looks like per c-2-4's capacity numbers, when to actually worry), and post-contest steps (run a backup, kick off complexity review, publish results). This is distinct from README/ARCHITECTURE's technical documentation — it's operational, written for a stressed organizer on the actual day, not a developer reading the codebase. Fold in C's technical recovery procedures (the Judge0 crash runbook, c-25-6) as an appendix rather than duplicating them, and pull in d-5-3's incident-response guidance directly.</div></details>
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="sprint">
+      <div class="sprint-h"><span class="num">6b</span><h3>AI Complexity Review</h3><span class="len">3–5 days</span></div>
+      <ul class="tasks">
+        <li class="task"><input type="checkbox" id="d-6b-1"><div class="task-body"><label for="d-6b-1" class="txt">Document the local-vs-cloud decision explicitly.</label>
+          <details class="ctx"><summary>Context</summary><div class="ctxbody">Whichever path A/C land on (a-6b-2, c-6b-1), write the actual decision into <code>ARCHITECTURE.md</code> §4 — if cloud, the "zero internet, ever" claim gets a real, stated exception, and it needs to read as an intentional documented tradeoff, not something a careful reader discovers by accident.</div></details>
+        </div></li>
+      </ul>
+      <div class="checkpoint"><b>Role in dry run</b>Run the mock contest as organizer. Collect friction notes afterward — independent first, compared second.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer>bytearena — mvp flight plan — sprint 0 through mvp complete, full history</footer>
+
+<script>
+  function showView(owner, btn){
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + owner).classList.add('active');
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+</script>
+
+</body>
+</html>

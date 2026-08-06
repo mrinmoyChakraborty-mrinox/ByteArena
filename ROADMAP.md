@@ -4,6 +4,8 @@ Companion to `README.md` and `ARCHITECTURE.md`, and an expansion of `ROADMAP.md`
 
 **How to use this doc:** work top to bottom. Every task has a checkbox. Don't skip ahead — later sprints assume earlier interfaces exist exactly as built. If a task references a file, that's the actual path it should live at in the repo.
 
+**Status as of 2026-08-01 (per project audit, head `aa1aef7`):** Sprints 0–2 are done — 11/11 judge DoD cases pass, not just the 4 minimum this doc originally asked for. Sprint 3 hasn't started. Actual file paths differ slightly from what's below (`server/database.py` not `db.py`, no `server/services/` yet, organizer UI is a vendored single-file `server/static/index.html` rather than a React app so far) — flagged inline rather than rewritten, since the differences don't matter functionally. A new **Sprint 2.5 — Security Gate** has been inserted before Sprint 3: three protections that were deliberately scoped out of Sprint 2 and need to close before this goes anywhere near a real contest.
+
 ---
 
 ## Table of Contents
@@ -11,6 +13,7 @@ Companion to `README.md` and `ARCHITECTURE.md`, and an expansion of `ROADMAP.md`
 - [Sprint 0 — Skeleton](#sprint-0--skeleton-2–3-days)
 - [Sprint 1 — Contest & Problem CRUD](#sprint-1--contest--problem-crud-1-week)
 - [Sprint 2 — Judge Worker, MVP Sandbox](#sprint-2--judge-worker-mvp-sandbox-1–15-weeks)
+- [Sprint 2.5 — Security Gate](#sprint-25--security-gate-before-sprint-3-1–2-days)
 - [Sprint 3 — Participant Flow](#sprint-3--participant-flow-1-week)
 - [Sprint 4 — Realtime Leaderboard](#sprint-4--realtime-leaderboard-3–5-days)
 - [Sprint 5 — Anti-Cheat Signals + Rate Limiting](#sprint-5--anti-cheat-signals--rate-limiting-3–5-days)
@@ -24,171 +27,115 @@ Companion to `README.md` and `ARCHITECTURE.md`, and an expansion of `ROADMAP.md`
 
 ---
 
-## Sprint 0 — Skeleton (2–3 days)
-
-**Goal:** prove the LAN round-trip and lock the schema. Nothing in this sprint touches judging, auth, or UI.
+## Sprint 0 — Skeleton (2–3 days) ✅ done
 
 ### Day 1 — the one round-trip that proves the whole premise
 
-- [ ] `mkdir bytearena && cd bytearena && python -m venv .venv && source .venv/bin/activate`
-- [ ] `pip install fastapi uvicorn[standard] sqlalchemy`
-- [ ] Create `server/main.py`:
-  ```python
-  from fastapi import FastAPI
-  app = FastAPI()
+- [x] Env + deps installed (Python 3.13 miniforge, FastAPI 0.108.0, Uvicorn 0.49.0, SQLAlchemy 2.0.51, Pydantic 1.10.26)
+- [x] `GET /health` implemented — returns `{"status": "ok", "service": "bytearena"}`, wired into `server/main.py`'s `lifespan`
+- [x] `uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload` confirmed booting, `/health` verified locally on `:8000`
+- [ ] **Not yet re-confirmed:** hitting `/health` from a second physical device on the same Wi-Fi, and repeating with the router's WAN uplink disabled. This was proven once during original Sprint 0 per commit history, but the 2026-08-01 audit only re-verified `localhost` — redo this specific check before trusting it going into Sprint 3's participant-flow testing, especially since dev has since moved to a Windows machine.
 
-  @app.get("/health")
-  def health():
-      return {"status": "ok"}
-  ```
-- [ ] Run it bound to all interfaces (not just localhost) so a second device can reach it:
-  `uvicorn server.main:app --host 0.0.0.0 --port 8000`
-- [ ] Find the organizer laptop's LAN IP (`ip addr` / `ipconfig`), open `http://<that-ip>:8000/health` from a phone or second laptop on the **same Wi-Fi**, confirm `{"status":"ok"}`.
-- [ ] Turn off the router's WAN/internet uplink (or just unplug it) and repeat the request — it must still work. This is the actual test of the "no cloud" premise, not just a nice-to-have.
-
-**Checkpoint:** if this doesn't work, nothing downstream matters — don't move on until two physical devices have done a real HTTP round-trip with zero internet in the path.
+**Checkpoint:** don't move deeper into Sprint 3 until this cross-device, no-internet round-trip has been redone on the actual current dev/contest hardware — it's cheap to re-check and expensive to discover it's broken later.
 
 ### Day 2 — schema and repo shape
 
-- [ ] Create the repo layout matching the README's `Contest/` structure:
-  ```
-  bytearena/
-  ├── server/
-  │   ├── main.py
-  │   ├── models.py          # SQLAlchemy models, one per ARCHITECTURE.md §2 table
-  │   ├── db.py               # engine + session, WAL pragma
-  │   └── routers/            # empty for now, filled in Sprint 1+
-  ├── judge/                  # empty for now, filled in Sprint 2
-  ├── frontend/                # empty for now, filled in Sprint 3
-  Contest/
-  ├── Problems/
-  ├── Submissions/
-  ├── Database/
-  ├── Logs/
-  └── Config/
-  ```
-- [ ] `server/db.py` — engine pointed at `Contest/Database/bytearena.db`, and set WAL mode on connect:
-  ```python
-  from sqlalchemy import create_engine, event
-
-  engine = create_engine("sqlite:///Contest/Database/bytearena.db")
-
-  @event.listens_for(engine, "connect")
-  def set_wal(dbapi_conn, _):
-      dbapi_conn.execute("PRAGMA journal_mode=WAL")
-  ```
-- [ ] `server/models.py` — every table from `ARCHITECTURE.md` §2 as a SQLAlchemy model: `Contest`, `Problem`, `Testcase`, `Participant`, `Submission`, `Verdict`, `Event`, `Warning`, `ReviewFlag`, `ComplexityReview`, `PlagiarismMatch`. Tables can be empty of data but the columns must match §2 exactly — Sprint 1+ assumes this shape is final.
-- [ ] `Base.metadata.create_all(engine)` on startup, confirm all 11 tables exist: `sqlite3 Contest/Database/bytearena.db ".tables"`.
+- [x] Repo layout — **actual paths:** `server/{main.py, database.py, models.py, schemas.py, problem_loader.py, routers/, static/}`, `judge/{interface.py, languages.py, sandbox.py, compare.py, worker.py}`, `scripts/test_judge.py`. No `frontend/` yet (organizer UI is `server/static/index.html`, vanilla JS) — fine through Sprint 2, revisit before Sprint 3's Monaco/WebSocket needs.
+- [x] `server/database.py` — WAL pragma **plus** `foreign_keys=ON` and `busy_timeout=10000` (the last one added mid-Sprint-2 specifically so the judge worker and API don't deadlock against each other — a real fix, not speculative hardening)
+- [x] `server/models.py` — all 11 tables from `ARCHITECTURE.md` §2, plus 7 enums (`ContestState`, `SubmissionStatus`, `Verdict`, `TestcaseStatus`, `EventType`, `ReviewDecision`, `ComplexityDecision`)
+- [x] `Base.metadata.create_all()` on startup, all 11 tables confirmed via `.schema`
 
 ### Day 2–3 — verify and freeze
 
-- [ ] `.gitignore`: `Contest/Database/*.db*`, `Contest/Submissions/`, `.venv/`, `__pycache__/`
-- [ ] Write down the LAN test result (which router, which two devices, screenshot or note) somewhere in `Logs/` or the repo README — you'll want this as a reference once things get more complex and something breaks.
-- [ ] Confirm `PRAGMA journal_mode` actually reports `wal` (`sqlite3 Contest/Database/bytearena.db "PRAGMA journal_mode;"`), not just that you set it.
+- [x] `.gitignore` covers `Contest/Database/*.db*`, `Contest/Submissions/`, `Contest/Runs/`
+- [ ] LAN test result from Day 1 not yet written down anywhere durable — do this once the re-check above is redone
+- [x] `PRAGMA journal_mode` confirmed reporting `wal`, not just set
 
-**DoD:** two laptops, one router, one FastAPI response, zero cloud services touched, schema exists with correct columns, WAL confirmed on disk.
+**DoD:** ~~two laptops, one router, one FastAPI response~~ — schema and WAL are solid; the actual cross-device round-trip needs a fresh re-check per the note above before calling Sprint 0 fully closed.
 
 ---
 
-## Sprint 1 — Contest & Problem CRUD (1 week)
+## Sprint 1 — Contest & Problem CRUD (1 week) ✅ done, exceeded scope
 
 **Goal:** an organizer can create a contest and load problems, no participants yet.
 
 ### Contest endpoints
 
-- [ ] `server/routers/contests.py`:
-  - `POST /contests` — body: `name, start_at, end_at, freeze_minutes, penalty_minutes` → creates row, `state="scheduled"`
-  - `GET /contests` — list all
-  - `GET /contests/{id}` — single contest detail
-- [ ] Pydantic schemas in `server/schemas.py` for request/response validation — don't pass raw dicts around.
+- [x] Full CRUD shipped, beyond the original `POST/GET` scope — `PUT/DELETE /api/contests` also implemented, plus state-transition coercion back to the `ContestState` enum
+- [x] Pydantic schemas in `server/schemas.py`
 
 ### Problem endpoints + disk loader
 
-- [ ] `server/routers/problems.py`:
-  - `POST /contests/{id}/problems` — manual entry: `code, title, statement_md, time_limit_ms, mem_limit_mb, points`
-  - `POST /contests/{id}/problems/load` — body: `{"code": "A"}`, triggers the disk loader below
-  - `GET /contests/{id}/problems` — list
-  - `GET /problems/{id}` — detail, including testcases
-- [ ] `server/services/problem_loader.py` — implements the logic from `PROBLEMS_GUIDE.md`:
-  - Reads `Contest/Problems/<code>/statement.md` → `problems.statement_md`
-  - Reads `Contest/Problems/<code>/config.json` if present, else defaults (`title=<code>`, `time_limit_ms=1000`, `mem_limit_mb=256`, `points=100`)
-  - Walks `Contest/Problems/<code>/tests/`, matches pairs by the three supported naming conventions (`input<N>/output<N>`, `in<N>/out<N>`, `in<N>/ans<N>`), inserts one `testcases` row per matched pair with `input_path`/`output_path` set to the file paths (not file contents — keep testcases on disk, per `ARCHITECTURE.md` design notes)
-  - Raise a clear error if a code directory doesn't exist, or if an `input<N>` has no matching output file — surface this to the organizer UI rather than silently skipping.
-- [ ] Unit test the loader against the sample problem in `PROBLEMS_GUIDE.md` (`Contest/Problems/A/` with 3 testcase pairs) — assert 3 `testcases` rows, correct `title`/`points` from `config.json`.
+- [x] `server/routers/problems.py` — beyond plan: also shipped `PUT/DELETE /api/problems/{id}` and full testcase CRUD (`GET/POST /api/problems/{id}/testcases`, `DELETE /api/testcases/{id}`), plus duplicate-`code` detection → `409`
+- [x] `server/problem_loader.py` (top-level file, not under a `services/` package — functionally identical):
+  - Reads `statement.md` → `problems.statement_md` ✓
+  - Reads `config.json` with documented defaults ✓
+  - Pairs `tests/` files across all three naming conventions ✓ — implementation does the pairing via basename substitution (`input→output`, `in→out`, `in→ans`) rather than a lookup table, same result
+  - Stores paths, not contents ✓
+  - Clear errors on missing directory / unmatched input ✓
+- [ ] **Not done as a standalone unit test** — the loader's correctness has only been exercised indirectly (via the DoD script and manual UI use against the real `Contest/Problems/A|B|C` fixtures), not via an isolated test asserting row counts/field values. Worth adding before the loader logic changes again.
 
 ### Minimal organizer frontend
 
-- [ ] `frontend/` — bootstrap React app (Vite is fine), no CDN dependencies — vendor everything per the README's offline promise from day one, don't leave this for later.
-- [ ] Screen 1: Create Contest form (`name`, `start_at`, `end_at`) → `POST /contests`
-- [ ] Screen 2: Problem list for a contest, with an "Add Problem" flow:
-  - Manual tab: the 5 fields from `PROBLEMS_GUIDE.md` Method 2
-  - Load from Disk tab: single `code` input → `POST /contests/{id}/problems/load`
-- [ ] Confirm both flows actually persist to SQLite by inspecting the DB directly (`sqlite3 ... "SELECT * FROM problems;"`), not just trusting the UI.
+- [x] **Deviation:** vanilla JS single-file `server/static/index.html` (447 lines) instead of a Vite/React build — no CDN dependencies either way, so the offline promise holds. Revisit this choice before Sprint 3 forces Monaco + WebSockets into the picture.
+- [x] Contest create/list/delete, Problems list + Add (Manual/Load from Disk), Testcases view/delete — all three tabs built and verified end-to-end
+- [x] Both flows confirmed persisting correctly to SQLite by direct inspection
 
-**DoD:** create a contest and add 2–3 real problems (at least one via disk load, one manual) through the UI, and see them stored correctly in SQLite.
+**DoD met:** contest created, 3 problems added (mix of manual + disk-loaded), verified in SQLite.
 
 ---
 
-## Sprint 2 — Judge Worker, MVP Sandbox (1–1.5 weeks)
+## Sprint 2 — Judge Worker, MVP Sandbox (1–1.5 weeks) ✅ done — 11/11 DoD cases, exceeded the 4-case minimum
 
-**Goal:** the core value proposition — code goes in, a correct verdict comes out, safely. This is called out in `README.md` and `ARCHITECTURE.md` as the single most important checkpoint in the whole build — don't let UI work pull you away before this is solid.
+**Goal:** the core value proposition — code goes in, a correct verdict comes out, safely. This is called out in `README.md` and `ARCHITECTURE.md` as the single most important checkpoint in the whole build — and it held up under the broader test matrix that actually got run.
 
 ### The stable interface (build this first, exactly as specified)
 
-- [ ] `judge/interface.py`:
-  ```python
-  def compile(source_path: str, lang: str) -> CompiledArtifact | CompileError: ...
-  def run(artifact: CompiledArtifact, input: str, limits: Limits) -> RunResult: ...
-  ```
-  Everything downstream (Phase 3's Docker swap) depends on nothing outside the worker calling anything but these two functions.
+- [x] `judge/interface.py` — `compile()`/`run()` implemented exactly as specified. One subtlety handled correctly that this doc didn't originally call out: for interpreted languages (only syntax-checked, not compiled to a binary), the "artifact" path has to stay the source file, not a nonexistent binary — `uses_bin = any("{bin}" in token for token in cfg["run"])` gates this.
 
 ### Language config
 
-- [ ] `judge/languages.py` — start with **one** language end-to-end before adding more (pick whatever your actual contest problems are in — likely Python or C++):
-  ```python
-  LANGUAGES = {
-      "cpp":    {"compile": "g++ -O2 -o {out} {src}", "run": "{out}"},
-      "python": {"compile": None,                      "run": "python3 {src}"},
-  }
-  ```
-- [ ] Get one language fully working (compile/CE, run/AC/WA/TLE) before adding the second — don't parallelize language support until the pipeline itself is proven.
+- [x] `judge/languages.py` — Python and C++ both fully working, config-only additions as designed
+- [x] `run_env_for()` (not in the original plan, added out of necessity) — prepends the compiler's bin dir to `PATH` so MSYS2-built C++ binaries can find `libstdc++-6.dll` at runtime. Worth keeping in mind if the eventual production machine is Linux — this specific fix is Windows-only and won't be needed there, but the pattern (making sure the runtime env is correct, not just the compile command) generalizes.
 
 ### MVP sandbox (OS-level isolation)
 
-- [ ] Create a dedicated low-privilege OS user (`useradd -M -s /usr/sbin/nologin judgerunner`) with no write access outside a per-run scratch dir.
-- [ ] Per-run scratch directory: `judge/run_sandbox.py` creates `/tmp/bytearena-run-<uuid>/`, copies the compiled artifact in, runs as `judgerunner`, wipes the directory after — every run, no exceptions, even on crash (use `try/finally`).
-- [ ] CPU/memory caps via `resource.setrlimit`:
-  ```python
-  import resource
-  resource.setrlimit(resource.RLIMIT_CPU, (time_limit_s, time_limit_s))
-  resource.setrlimit(resource.RLIMIT_AS, (mem_limit_bytes, mem_limit_bytes))
-  ```
-- [ ] Wall-clock timeout that kills the **process group**, not just the parent (catches fork bombs):
-  ```python
-  proc = subprocess.Popen(cmd, preexec_fn=os.setsid, ...)
-  try:
-      stdout, stderr = proc.communicate(timeout=wall_clock_s)
-  except subprocess.TimeoutExpired:
-      os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-  ```
-- [ ] Block outbound network for the sandboxed user (restrictive `iptables` rule scoped to `judgerunner`'s UID, or a network namespace with loopback only) — verify with a testcase that does `socket.connect()` and confirm it fails.
+- [ ] **Low-privilege OS user — code supports it, not actually provisioned.** `BYTEARENA_SANDBOX_USER` env var exists and `_drop_privileges` implements the `setgid`/`setuid` drop, but no `judgerunner` user has been created on any real machine yet, so POSIX runs currently execute as the worker's own user. Moved to Sprint 2.5 below — this is a real gap, not a checked box.
+- [x] Per-run scratch dir under `Contest/Runs/run_<id>_*/`, wiped in `finally` — verified zero leftover directories across all 11 DoD cases
+- [x] CPU/memory caps — implemented with a documented enforcement/verdict split: the *enforcement* rlimit is set generously above the problem's limit (`max(limit*2, limit+256)`) so an over-limit process survives long enough to be **measured** rather than killed instantly; the *verdict* threshold is applied separately by the worker comparing peak memory to the problem's actual limit. This is a real design decision beyond what this doc originally specified, and it's the right one — makes MLE deterministic instead of racy.
+- [x] Wall-clock timeout, process-group kill — POSIX: `setsid()` + `killpg(SIGKILL)` on `TimeoutExpired`. **Windows wasn't in the original plan at all**, but the dev machine is Windows, so a second backend was built: Job Object with `JOB_OBJECT_LIMIT_JOB_MEMORY` + `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, with a poll-based (`taskkill /F /T`) fallback for when job assignment fails (which it does in this dev shell — see finding below). Both paths verified to leave zero stray processes after a TLE case.
+- [ ] **Outbound network blocking — deliberately deferred, not forgotten.** Documented as a TODO in `judge/sandbox.py`. Moved to Sprint 2.5 below — this is the single guarantee the "no internet" pitch actually depends on, so treat it as blocking, not backlog.
 
 ### Queue + verdict pipeline
 
-- [ ] DB-backed queue: `submissions.status` column, worker polls `WHERE status='queued' ORDER BY submitted_at LIMIT 1` (add `SELECT ... FOR UPDATE SKIP LOCKED`-equivalent locking once past a single worker — a simple `UPDATE ... WHERE status='queued' AND id=? RETURNING *` claim pattern works fine on SQLite for now).
-- [ ] `judge/worker.py` — main loop: claim job → compile → run against every testcase for the problem → compare stdout to expected output → aggregate verdict → write `verdicts` rows (per-testcase) and update `submissions.verdict`.
-- [ ] Verdict states implemented exactly: `AC`, `WA`, `TLE`, `MLE`, `RE`, `CE`, plus internal `JUDGE_ERROR` for infra failures (keep this distinct from `RE` in the code — a judge bug should never display as a participant fault).
+- [x] Atomic claim via `UPDATE ... WHERE id = (SELECT ... ORDER BY submitted_at, id LIMIT 1) RETURNING id` — correct pattern, though only single-worker execution has actually been exercised so far; multi-worker correctness rests on SQLite's single-writer semantics plus this atomic claim, untested under real concurrent load
+- [x] `judge/worker.py` main loop — claim → compile → run each testcase in id order → **short-circuit on first failure**, remaining testcases marked `SKIPPED` (a refinement beyond "run every testcase" — faster judging, and it matches how most real judges behave)
+- [x] All six verdict states implemented, plus `JUDGE_ERROR` kept distinct from `RE` for infra failures as specified
 
-### Prove it
+### Prove it — actual results, broader than planned
 
-- [ ] Write a throwaway script `scripts/test_judge.py` that inserts a submission row directly (bypassing the API, since it doesn't exist yet) for:
-  - A known-correct solution to the sample problem → expect `AC`
-  - A known infinite loop (`while True: pass`) → expect `TLE`, and confirm the process is actually killed (`ps aux` shows nothing lingering)
-  - A program that allocates way past the memory cap → expect `MLE`
-  - A program with a syntax error → expect `CE`
-- [ ] After running the infinite-loop case, confirm the laptop is still responsive — this is explicitly part of the DoD, not just "the verdict was TLE."
+- [x] `scripts/test_judge.py` ran **11 cases** (AC/WA/TLE/MLE/RE/CE × {python, cpp}, one extra WA) instead of the 4 originally scoped — **11/11 PASS**
+- [x] Laptop responsiveness confirmed after every TLE/MLE case — zero stray processes, zero leftover scratch dirs
 
-**DoD:** submit a known-correct solution and a known-infinite-loop solution from a script — the correct one returns `AC`, the infinite loop gets killed and returns `TLE`, and your laptop is still responsive afterward.
+**Two real bugs found and fixed during this sprint** (worth keeping visible, not just "tests passed"):
+1. Job Object assignment fails with error 6 in this dev shell (parent process already lives inside a job with no breakaway) → the poll+taskkill fallback exists because of this, not speculatively.
+2. `-O2` silently elided the C++ MLE test's dead `vector` allocation, and Python was originally producing `RE` instead of `CE` for syntax errors, and the artifact-path bug caused the Python runner to try executing a nonexistent `main.exe`. All three fixed; the MLE test now actually uses the allocation (`printf(v.back())`) so `-O2` can't optimize it away again.
+
+**DoD met, exceeded:** correct → AC, infinite loop → TLE (both languages), laptop stayed responsive throughout, plus WA/MLE/RE/CE all separately verified rather than just the two required cases.
+
+---
+
+## Sprint 2.5 — Security Gate (before Sprint 3, 1–2 days)
+
+**Goal:** close the three protections that were correctly identified in Sprint 2 as deferred, before building anything that assumes the judge worker is contest-safe. Pulled directly from the 2026-08-01 audit's gap list — these aren't new scope, they're scope that was explicitly pushed here rather than skipped, and shouldn't be allowed to drift further.
+
+- [ ] **Block outbound network for the sandboxed process.** POSIX: scope an `iptables`/`nftables` DROP rule to the sandbox UID (works cleanly once the low-priv user below exists — block by UID rather than trying to sandbox the worker's own user), or run under a network namespace with loopback only. Write the missing test alongside the fix: a testcase that calls `socket.connect()` and asserts it fails.
+- [ ] **Provision the low-privilege `judgerunner` OS user** on the actual target machine (`useradd -M -s /usr/sbin/nologin judgerunner` on Linux), set `BYTEARENA_SANDBOX_USER`, and verify by checking the sandboxed process's *effective* UID at runtime — not just that the env var is set.
+- [ ] **Add a stale-claim reaper.** A worker crash between claim (`status → COMPILING`/`RUNNING`) and finish currently leaves a submission stuck forever with no self-healing. A periodic sweep (`UPDATE submissions SET status='queued' WHERE status IN ('compiling','running') AND claimed_at < now() - interval '2 minutes'`) closes this — small enough to build in an afternoon.
+
+**Decide explicitly, don't let it default:** is the contest-day organizer laptop going to be Linux or Windows? The POSIX sandbox path (hard rlimits, real `killpg`) is a stronger guarantee than the Windows fallback (10ms-granularity polling, job assignment can fail as already observed in this dev shell). If Windows is the real target, the fallback path needs the same adversarial scrutiny the POSIX path is getting here — right now it's only been proven correct in a cooperative dev shell, not tested against code trying to evade it.
+
+**DoD:** a testcase that attempts an outbound network call fails; a sandboxed process's effective UID is confirmed as the low-priv user, not the worker's own; killing the worker process mid-`RUNNING` and restarting it results in the stuck submission self-recovering within one reaper cycle, not requiring manual DB intervention.
 
 ---
 
@@ -367,13 +314,17 @@ Separate from the build roadmap — this is what to physically do on the day of 
 
 ## Risk Register
 
-Things worth deciding on paper before they become a live-contest surprise:
+Things worth deciding on paper before they become a live-contest surprise. Status column added post-audit (2026-08-01) so this reflects reality, not just intent.
 
-| Risk | Mitigation | Where it's handled |
-|---|---|---|
-| Judge worker's sandbox has a gap, untrusted code escapes | OS-level isolation from day one (Sprint 2), not deferred to Phase 3 | `ARCHITECTURE.md` §3 |
-| Organizer laptop crashes mid-contest | Periodic DB backup + DB-derived (not memory-only) contest state | Sprint 6, `ARCHITECTURE.md` §8 |
-| WebSocket full re-sends saturate Wi-Fi at scale | Delta-only leaderboard pushes, batched anti-cheat events | Sprint 4, Sprint 5 |
-| Participant on a second device (phone, mobile data) bypasses all anti-cheat layers | Structural limitation — state it plainly to organizers rather than implying it's solved | README's Anti-Cheating section, `ARCHITECTURE.md` §7 |
-| AI complexity review breaks the "zero internet" promise | Default to local model (Ollama); if using cloud API, document the brief post-judging reconnect explicitly | Sprint 6b, `ARCHITECTURE.md` §4 |
-| Weak testcases let an inefficient/wrong-complexity solution pass as AC | Post-contest complexity review can demote, but only as an audit — never silently changes what participants saw live | `ARCHITECTURE.md` §4 gate/tiebreaker model |
+| Risk | Mitigation | Where it's handled | Status |
+|---|---|---|---|
+| Judge worker's sandbox has a gap, untrusted code escapes | OS-level isolation from day one (Sprint 2), not deferred to Phase 3 | `ARCHITECTURE.md` §3 | ⚠️ Partial — rlimits/timeout/kill work; low-priv user + network block still open, see Sprint 2.5 |
+| Untrusted code reaches the internet | Block outbound network for the sandbox UID | Sprint 2.5 (moved from Sprint 2, was deferred) | 🔴 Open — unimplemented, treat as blocking before any real contest |
+| Sandbox escape isn't actually contained | Dedicated low-priv `judgerunner` OS user | Sprint 2.5 | 🔴 Open — code path exists, nothing provisioned yet |
+| Worker crash leaves a submission stuck forever | Stale-claim reaper | Sprint 2.5 | 🔴 Open — no reaper exists yet |
+| Organizer laptop crashes mid-contest | Periodic DB backup + DB-derived (not memory-only) contest state | Sprint 6, `ARCHITECTURE.md` §8 | Not started (Sprint 6 not reached) |
+| WebSocket full re-sends saturate Wi-Fi at scale | Delta-only leaderboard pushes, batched anti-cheat events | Sprint 4, Sprint 5 | Not started |
+| Participant on a second device (phone, mobile data) bypasses all anti-cheat layers | Structural limitation — state it plainly to organizers rather than implying it's solved | README's Anti-Cheating section, `ARCHITECTURE.md` §7 | Accepted, documented |
+| AI complexity review breaks the "zero internet" promise | Default to local model (Ollama); if using cloud API, document the brief post-judging reconnect explicitly | Sprint 6b, `ARCHITECTURE.md` §4 | Not started |
+| Weak testcases let an inefficient/wrong-complexity solution pass as AC | Post-contest complexity review can demote, but only as an audit — never silently changes what participants saw live | `ARCHITECTURE.md` §4 gate/tiebreaker model | Not started |
+| Windows sandbox fallback is a softer guarantee than the POSIX path | Decide contest-day OS explicitly; harden whichever path is actually used | Sprint 2.5 note | 🔴 Open decision — currently defaulting to whatever the dev machine happens to be |

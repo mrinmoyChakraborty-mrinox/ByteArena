@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 # === Contest ===
@@ -31,8 +31,7 @@ class ContestOut(BaseModel):
     penalty_minutes: int
     problem_count: int = 0
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === Problem ===
@@ -64,8 +63,7 @@ class ProblemOut(BaseModel):
     points: int
     testcase_count: int = 0
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === Testcase ===
@@ -86,8 +84,7 @@ class TestcaseOut(BaseModel):
     points: int
     checker_type: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # === Problem Loading from Files ===

@@ -12,6 +12,9 @@ Contest/Database/*.db-wal
 Contest/Submissions/*
 !Contest/Submissions/.gitkeep
 
+# Judge scratch runs
+Contest/Runs/
+
 # OS
 .DS_Store
 Thumbs.db
